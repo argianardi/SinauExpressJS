@@ -102,6 +102,34 @@ Jika function middleware myLogger dibuat setelah task route ke root path (/) (`f
 - ### Middleware function requestTime
   Selanjutnya, kita akan membuat fungsi middleware bernama "requestTime" dan menambahkan properti requestTime ke objek request.
 
+```
+express = require("express");
+const app = express();
+
+const port = 3003;
+
+// ------------------ middleware function ------------------
+const requestTime = function (req, res, next) {
+  req.requestTime = new Date();
+  next();
+};
+
+// ------------------ Call middleware function ------------------
+app.use(requestTime);
+
+app.get("/", function (req, res) {
+  let responseText = "Hello world <br>";
+  responseText += `<small>Request at: ${req.requestTime}</small>`;
+  res.send(responseText);
+});
+
+app.listen(port, () => {
+  console.log(`Server ${port} is okay`);
+});
+```
+
+Setiap kali kita melakukan request ke root app (browser direload), aplikasi akan menampilkan nilai timestap secara real time di browser.
+
 ## Reference
 
 - [[1] expressjs.com](http://expressjs.com/en/guide/writing-middleware.html)
