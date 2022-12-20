@@ -59,6 +59,8 @@ Metode pada objek respons (res) dalam tabel berikut dapat mengirimkan respons ke
 | res.sendFile()   | Mengirim file sebagai aliran oktet.                                                    |
 | res.sendStatus() | Menetapkan kode status respons dan kirim representasi stringnya sebagai badan respons. |
 
+#### res.json()
+
 Berikut contoh penggunaannya untuk response json:
 
 ```
@@ -85,3 +87,27 @@ hasilnya akan seperti ini:
 ```
 {"id":1,"name":"Pain"}
 ```
+
+#### res.redirect()
+
+Berikut contoh penggunaan redirect:
+
+```
+const express = require("express");
+const app = express();
+const port = 5001;
+
+app.get("/", (req, res) => {
+  res.send("Home");
+});
+
+app.get("/about", (req, res) => {
+  res.redirect("http://expressjs.com/");
+});
+
+app.listen(port, () => {
+  console.log(`Server ${port} is runing...`);
+});
+```
+
+Sehingga saat kita berpindah ke route `http://localhost:5001/about` kita langsung di-direct ke website expressJS
