@@ -94,7 +94,7 @@ Untuk memahami middleware kita akan bahas 3 contoh perikut [[1]](http://expressj
 
 Ini adalah contoh sederhana dari fungsi middleware bernama "myLogger". Fungsi ini hanya mencetak "LOGGED" saat request ke aplikasi melewatinya. Fungsi middleware dideklarasikan ke variabel bernama myLogger.
 
-````
+```
 const express = require("express");
 const app = express();
 
@@ -181,7 +181,6 @@ Jika function middleware myLogger dibuat setelah task route ke root path (/) (`f
 Selanjutnya, kita akan membuat fungsi middleware bernama "requestTime" dan menambahkan properti requestTime ke objek request.
 
 ```
-
 express = require("express");
 const app = express();
 
@@ -205,7 +204,6 @@ res.send(responseText);
 app.listen(port, () => {
 console.log(`Server ${port} is okay`);
 });
-
 ```
 
 Setiap kali kita melakukan request ke root app (browser direload), aplikasi akan menampilkan nilai timestap secara real time di browser.
@@ -214,10 +212,47 @@ Setiap kali kita melakukan request ke root app (browser direload), aplikasi akan
 
 Terakhir, kami akan membuat fungsi middleware yang memvalidasi cookies yang masuk dan mengirimkan respons 400 jika cookie tidak valid. Berikut adalah contoh fungsi yang memvalidasi cookie dengan external async service [[1]](http://expressjs.com/en/guide/writing-middleware.html).
 
+- ### Setting Keys untuk Headers
+
+Disini kita akan membuat condisi request akan error 400 jika saat request tidak menyertakan content-type : application/json.
+
+```
+const express = require("express");
+const app = express();
+
+const requiereJsonContent = () => {
+  return (req, res, next) => {
+    if (req.headers["content-type"] !== "application/json") {
+      res.status(400).send("server required application/jason");
+    } else {
+      next();
+    }
+  };
+};
+
+app.post("/", requiereJsonContent(), (req, res, next) => {
+  res.send("You sent JSON");
+});
+
+app.listen(5000, () => {
+  console.log("server is runing...");
+});
+```
+
+Sehingga jika kita coba request post menggunakan postman dan set content-type: application/json dibagian headers, akan menghasilkan respon 200 dan sesuai code diatas menampilkan:
+
+```
+You sent JSON
+```
+
+Tetapik jika kita tidak set headers dengan content-type: aplication/json akan menghasilkan respon 400 dan sesuai code diatas menampilkan:
+
+```
+server required application/jason
+```
+
 ## Reference
 
 - [[1] expressjs.com](http://expressjs.com/en/guide/writing-middleware.html)
 
 [[1]](http://expressjs.com/en/guide/writing-middleware.html)
-```
-````
