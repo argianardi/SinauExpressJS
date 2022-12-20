@@ -151,3 +151,101 @@ Sehiggga saat kita menggunakan postmat dan menjalankan:
 - method post di url `http://localhost:5001/books` akan menghasilkan <b> post books </b>
 - method put di url `http://localhost:5001/books` akan menghasilkan <b>put books </b>
 - method delete di url `http://localhost:5001/books` akan menghasilkan <b>delete books</b>
+
+### Express Router
+
+Digunakan untuk membuat router modular.
+pertama kita harus import module express menggunakan require
+
+```
+const express = require('express');
+```
+
+Setelah itu instant `express.Route()` kedalam sebuah variabel (di contoh router)
+
+```
+const router = express.Router();
+```
+
+Selanjutnya gunakan variabel router express tadi untuk membuat request router. Contohnya kita membuat reqest router untuk CRUD user:
+
+```
+router
+  .route("/users")
+  .get((req, res) => {
+    res.send("get users");
+  })
+  .post((req, res) => {
+    res.send("post users");
+  });
+
+router
+  .route("/user/:userId")
+  .put((req, res) => {
+    res.send("put user");
+  })
+  .delete((req, res) => {
+    res.send("delete user");
+  });
+```
+
+Terakhir kita export modul router yang kita buat
+
+```
+module.exports = router;
+```
+
+Berikut code lengkapnya:
+
+```
+const express = require("express");
+const app = express();
+const router = express.Router();
+
+router
+  .route("/users")
+  .get((req, res) => {
+    res.send("get users");
+  })
+  .post((req, res) => {
+    res.send("post users");
+  });
+
+router
+  .route("/user/:userId")
+  .put((req, res) => {
+    res.send("put user");
+  })
+  .delete((req, res) => {
+    res.send("delete user");
+  });
+
+module.exports = router;
+```
+
+Setelah itu baru kita bisa gunakan modul router yang kita buat tadi untuk bagian lain di file yang berbeda. Pertama kita harus import modul router yang kita buat tersebut menggunakan require, arahkan ke lokasi penyimpanan module router tersebut dan simpan dalam sebuah variabel (di contoh userRouter).
+Kemudian untuk bisa menjalankannya panggil modul router dengan format code:
+
+```
+app.use(userRouter);
+```
+
+Dimana,
+
+- app adalah turunan dari express
+- userRouter adalah nama variabel yang menyimpan module router
+
+Berikut code lengkapanya:
+
+```
+const express = require("express");
+const app = express();
+const userRouter = require("./userRouter");
+const port = 5001;
+
+app.use(userRouter);
+
+app.listen(port, () => {
+  console.log(`Server ${port} is runing...`);
+});
+```
