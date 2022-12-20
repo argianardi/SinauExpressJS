@@ -111,3 +111,43 @@ app.listen(port, () => {
 ```
 
 Sehingga saat kita berpindah ke route `http://localhost:5001/about` kita langsung di-direct ke website expressJS
+
+### app.route()
+
+Digunakan untuk menggabungkan lebih dari satu methode request (get, post, put dan delete) dalam satu path route (url) yang sama. Berikut contoh penggunaannya:
+
+```
+const express = require("express");
+const app = express();
+const port = 5001;
+
+app.get("/", (req, res) => {
+  res.send("Home");
+});
+
+app
+  .route("/books")
+  .get((req, res) => {
+    res.send("get books");
+  })
+  .post((req, res) => {
+    res.send("post books");
+  })
+  .put((req, res) => {
+    res.send("put books");
+  })
+  .delete((req, res) => {
+    res.send("delete books");
+  });
+
+app.listen(port, () => {
+  console.log(`Server ${port} is runing...`);
+});
+```
+
+Sehiggga saat kita menggunakan postmat dan menjalankan:
+
+- method get di url `http://localhost:5001/books` akan menghasilkan <b>get books</b>
+- method post di url `http://localhost:5001/books` akan menghasilkan <b> post books </b>
+- method put di url `http://localhost:5001/books` akan menghasilkan <b>put books </b>
+- method delete di url `http://localhost:5001/books` akan menghasilkan <b>delete books</b>
