@@ -86,7 +86,7 @@ Hasilnya akan berubah urutan sesuai urutan penulisannya di code seperti ini:
 <img src="../img/middleware2.png" alt="MarineGEO circle logo" />
 <p>
 
-Declarasi function request juga harus dibuat di bawah function middleware. Jika function request berada di bawah function middleware maka function middleware tidak akan dieksekusi.
+Declarasi function request juga harus dibuat di bawah function middleware. Jika function request berada di atas function middleware maka function middleware tidak akan dieksekusi.
 
 Untuk memahami middleware kita akan bahas 3 contoh perikut [[1]](http://expressjs.com/en/guide/writing-middleware.html):
 
