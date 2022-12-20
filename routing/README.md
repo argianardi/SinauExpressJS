@@ -1,6 +1,6 @@
 # Routing
 
-Routing adalah cara menentukan bagaimana aplikasi meresponse permintaan klien ke endpoint tertentu yang merupakan URI (atau jalur) dan metode HTTP request tertentu (GET, POST, dan sebagainya). Router didefinisikan menggunakan:
+Routing adalah cara menentukan bagaimana aplikasi meresponse permintaan klien ke endpoint tertentu yang merupakan URL (atau jalur) dan metode HTTP request tertentu (GET, POST, dan sebagainya). Router didefinisikan menggunakan:
 
 ```
 app.METHOD(PATH, HANDLER)
@@ -41,7 +41,7 @@ Misalnya jika kita masukkan url `http://localhost:3001/users/2/books/3` di searc
 {"userId":"2","bookId":"3"}
 ```
 
-<i>Note: Nama parameter rute harus terdiri dari “karakter kata” ([A-Z a-z 0-9 _]).</i>
+<i>Note: Nama parameter rute hanya bisa terdiri dari “karakter kata” ([A-Z a-z 0-9 _]).</i>
 
 ### Response Methods
 
@@ -53,8 +53,35 @@ Metode pada objek respons (res) dalam tabel berikut dapat mengirimkan respons ke
 | res.end()        | Mengakhiri proses respons.                                                             |
 | res.json()       | Mengirim respons JSON.                                                                 |
 | res.jsonp()      | Mengirim respons JSON dengan dukungan JSONP.                                           |
-| res.redirect()   | Mengarahkan permintaan.                                                                |
+| res.redirect()   | Mengarahkan permintaan atau berpindah ke halaman yang ingin dituju.                    |
 | res.render()     | Merender template tampilan.                                                            |
 | res.send()       | Mengirim response dari berbagai type.                                                  |
 | res.sendFile()   | Mengirim file sebagai aliran oktet.                                                    |
 | res.sendStatus() | Menetapkan kode status respons dan kirim representasi stringnya sebagai badan respons. |
+
+Berikut contoh penggunaannya untuk response json:
+
+```
+const express = require("express");
+const app = express();
+const port = 5001;
+
+app.get("/", (req, res) => {
+  const akatsuki = {
+    id: 1,
+    name: "Pain",
+  };
+  res.json(akatsuki);
+});
+
+app.listen(port, () => {
+  console.log(`${port} is runing...`);
+});
+```
+
+Jika kita buka `http://localhost:5001/`
+hasilnya akan seperti ini:
+
+```
+{"id":1,"name":"Pain"}
+```
