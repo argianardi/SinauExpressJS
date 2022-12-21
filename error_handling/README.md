@@ -3,7 +3,7 @@
 Error handling adalah proses di mana menangkap dan memproses error yang terjadi secara synchronous dan asynchronous.
 
 Untuk memahaminya kita langsung bahas di contoh.
-Buat code dibawah ini dan lakukan request berdasarkan url dibawah ini, Maka hasilnya akan error dengan message user is not defined.
+Buat code dibawah ini dan lakukan request berdasarkan url dibawah ini, Maka hasilnya akan error dengan message user is not defined [[1]](https://www.youtube.com/watch?v=mGPj-pCGS2c).
 
 ```
 const express = require("express");
@@ -71,7 +71,7 @@ Dengan menambahkan try catch block diatas kita bisa menghandle error, yaitu saat
 
 ## Error Handling dengan Middleware
 
-Kita juga bisa membuat error handling menggunakan middleware. Di contoh ini kita gunakan middleware untuk error handling secara modular dan satu lagi middleware di code utama.
+Kita juga bisa membuat error handling menggunakan middleware. Di contoh ini kita gunakan middleware untuk error handling secara modular dan satu lagi middleware di code utama [[1]](https://www.youtube.com/watch?v=mGPj-pCGS2c).
 
 Pertama kita buat error handling middleware yang di jadikan modular (di contoh filenya bernama errorHandler.js):
 
@@ -121,3 +121,7 @@ Fungsi dari middleware di code utama ini adalah sebagai trigger untuk menjalanka
 ```
 
 Artinya saat terjadi error jalankan middleware selanjutnya, yaitu middleware modular tadi (errorHandler) yang dipanggil melaui app `app.use(errorHandler);` untuk menampilkan status 400 dan error message.
+
+## References
+
+- [youtube.com/@onelightwebdev](https://www.youtube.com/watch?v=mGPj-pCGS2c)
