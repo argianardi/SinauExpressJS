@@ -2,7 +2,80 @@
 
 Error handling adalah proses di mana menangkap dan memproses error yang terjadi secara synchronous dan asynchronous.
 
-Untuk memahaminya kita langsung bahas di contoh.
+## Synchronous
+
+Dalam synchronous kita hanya perlu memberikan task `throw new Error('error_message')` dan express secara default akan menampilkan secara lengkap dan tentunya tampak sangat rumit. Berikut contohnya:
+
+```
+const express = require("express");
+const app = express();
+
+app.get("/error", (req, res) => {
+  throw new Error("It is error");
+});
+
+app.listen(4001, () => {
+  console.log("Server 4001 is running...");
+});
+```
+
+Sehingga saat kita melakukan request hasil errornya akan tampak seperti ini:
+
+<p align="center">
+<img src="../img/syncError.png" alt="synchronous error"/> 
+</p>
+
+## Asynchronous
+
+Pada asynchronous ini hampir sama seperti synchronous, bedanya pada asynchronous ini kita menambahkan function next(). Dengan adanya function next ini akan secara otomatis membuat throw error juga tetapi errornya bisa kita handle atau olah saat error ini terjadi kita akan melakukan apa (biasanya memberikan status dan informasi error yang lebih jelas dan spesifik). Biasanya error dimasukkan ke <i>catch</i> selanjutnya akan dimasukkan lagi ke <i>next()</i>, agar nantinya bisa dihandle.
+
+Kita bisa membuat error handling menggunakan middleware dengan menambahkan argument error sehingga nantinya akan terdapat 4 argument, yaitu err,req, res dan next. Berikut contoh error handling menggunakan middleware untuk dua function request yait `app.get('/'.....` dan function request `app.get('/error....`
+
+```
+const express = require("express");
+const app = express();
+
+// Error handling1---------------------------------
+const errorHandler = (error, req, res, next) => {
+  res.status(212).send(error.message);
+};
+
+// Error handling2---------------------------------
+const errorHandler2 = (error, req, res, next) => {
+  res.status(210).send(error.message);
+};
+
+// request function1 --------------------------------
+app.get("/", (req, res) => {
+  throw new Error("It is error");
+});
+// call error handling 1----------------------------
+app.use(errorHandler);
+
+// request function2 --------------------------------
+app.get("/error", (req, res, next) => {
+  FileSystem.readFile("/file-does-not-exist", (err, data) => {
+    if (err) {
+      next(err);
+    } else {
+      res.send(data);
+    }
+  });
+});
+// call error handling 2----------------------------
+app.use(errorHandler2);
+
+app.listen(4001, () => {
+  console.log("Server 4001 is running...");
+});
+```
+
+Hasilnya saat kita melakukan request `http://localhost:4001/` di postman akan tampil
+di body akan tampil pesan error <i>It is error</i> dan menampilkan status: 212. Dan saat kita melakaukan request `http://localhost:4001/error` akan tampil di body pesan error <i>FileSystem is not defined</i> dan menampilkan status:210.
+
+Urutan penulisan code sangat penting disini, dekalarasi function error handling bisa dibuat di paling atas kemudian baru dilanjutkan dengan request function terakhir baru kita buat code untuk memanggil function error handling. Urutannya persis seperti contoh code diatas.
+
+Agar lebih paham kita bahas contoh lainnya.
 Buat code dibawah ini dan lakukan request berdasarkan url dibawah ini, Maka hasilnya akan error dengan message user is not defined [[1]](https://www.youtube.com/watch?v=mGPj-pCGS2c).
 
 ```
