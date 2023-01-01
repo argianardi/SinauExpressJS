@@ -1,31 +1,24 @@
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
 
-app.get("/", function (request, response) {
-  response.send("hello world");
-});
-//artinya jika ada yang mengakses routing '/' jalankan function berikut
+const mahasiswaRoutes = require("./routes/mahasiswa");
 
-app.get("/about", function (request, response) {
-  response.send("this is about page");
-});
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use("/mahasiswa", mahasiswaRoutes);
 
-app.get("/users", function (request, response) {
-  response.send("Get User");
-});
-
-app.post("/users", function (request, response) {
-  response.send("Post User");
+app.use((req, res, next) => {
+  const error = new Error("Tidak ditemukan");
+  error.status = 404;
+  next(error);
 });
 
-app.put("/users", function (request, response) {
-  response.send("Put User");
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: error.message,
+  });
 });
 
-app.delete("/users", function (request, response) {
-  response.send("Delete User");
-});
-
-app.listen(3000, function () {
-  console.log("server is okay");
-});
+module.exports = app;
