@@ -236,6 +236,46 @@ Body parser adalah library yang berisi middleware untuk membaca sebuah data yang
   }
   ```
 
+## Error Handling
+
+Digunakan untuk memberikan keterangan error saat request yang dilakukan user terjadi kesalahan. Untuk melakukannya langsung tambahkan function error handling di tempat yang kita inginkan (di contoh di bagian file utama project yaitu index.js)
+
+```
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
+
+const mahasiswaRoutes = require("./routes/mahasiswa");
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use("/mahasiswa", mahasiswaRoutes);
+
+//--------------------------------------------------
+app.use((req, res, next) => {
+    const error = new Error("Tidak ditemukan");
+    error.status = 404;
+    next(error);
+});
+
+app.use((error, req, res, next) => {
+    res.status(error.status || 500);
+    res.json({
+        error: error.message,
+    });
+});
+//--------------------------------------------------
+module.exports = app;
+```
+
+Dengan adanya function error handling di atas semua routes (user melakukan request dengan alamat url yang salah) yang belum terdefinisikan akan diarahkan ke function error handling tersebut [[1]](https://www.youtube.com/watch?v=9LEAyHG7GqI&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=5) . Maka saat kita melakukan request dengan method apapun dan alamat url yang salah akan menghasilkan response status 404 dan body response:
+
+```
+{
+    "error": "Tidak ditemukan"
+}
+```
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
