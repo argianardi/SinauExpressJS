@@ -276,6 +276,41 @@ Dengan adanya function error handling di atas semua routes (user melakukan reque
 }
 ```
 
+## Connect To MYSQL
+
+Berikut langkah - langkah untuk melakukan koneksi ke mysql [[1]](https://www.youtube.com/watch?v=zd2WAqAP7pg&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=6):
+
+- Buat data base, table dan insert data di mysql <br>
+  Di contoh ini kita membuat data base bernama kuliah dan table bernama mahasiswa.
+- install mysql, dengan command:
+
+  ```
+  npm install --save mysql
+  ```
+
+- Buat folder bernama config, di dalamnya buat file bernama mysql.js dan buat code berikut:
+
+  ```
+  var mysql = require("mysql");
+
+  var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "zero",
+    database: "mysql",
+  });
+
+  con.connect(function (error) {
+    if (error) throw error;
+    console.log("Koneksi berhasil");
+  });
+
+  module.exports = con;
+  ```
+
+- Running file mysql.js menggunakan nodemon dengan command `nodemon mysql.js` <br>
+  Setelah dirunning akan di log akan tampil `Koneksi berhasil` sebagai tanda bahwa kita telah berhasil melakukan koneksi ke mysql.
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
