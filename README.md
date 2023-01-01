@@ -146,6 +146,97 @@ Terdapat beberapa langkah yang harus dijalankan dalam membuat routing [[1]](http
   }
   ```
 
+## Body Parser
+
+Body parser adalah library yang berisi middleware untuk membaca sebuah data yang dikirimkan oleh http post dan menyimpannya sebagai object javascript yang dapat diakses melalui req.body [[2]](https://santrikoding.com/tutorial-expressjs-restful-api-4-insert-data-ke-database). Berikut cara penggunaannya [[1]](https://www.youtube.com/watch?v=sjRtGR8tQDI&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=4):
+
+- Install body parser dengan command:
+
+  ```
+  npm install --save body-parser
+  ```
+
+- Inisiasi body parser di file utama project (di contoh index.js)
+
+  ```
+  const express = require("express");
+  const app = express();
+  //-----------------------------------------------------
+  const bodyParser = require("body-parser");
+
+  const mahasiswaRoutes = require("./routes/mahasiswa");
+
+  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(bodyParser.json());
+  //-----------------------------------------------------
+  app.use("/mahasiswa", mahasiswaRoutes);
+
+  module.exports = app;
+  ```
+
+- Buat `req.body` di routing function dengan method post (di contoh di bagian file mahasiswa.js)
+
+  ```
+  const express = require("express");
+  const router = express.Router();
+
+  router.get("/", (req, res, next) => {
+      res.status(200).json({
+          message: "get method mahasiswa",
+      });
+  });
+
+  router.post("/", (req, res, next) => {
+    //---------------------------------------------------
+      const mahasiswa = {
+          nim: req.body.nim,
+          nama: req.body.nama,
+      };
+    //---------------------------------------------------
+      res.status(200).json({
+          message: "post method mahasiswa",
+          data: mahasiswa,
+      });
+  });
+
+  router.get("/:nim", (req, res, next) => {
+      const nim = req.params.nim;
+      if (nim === "12345") {
+          res.status(200).json({
+          message: "NIM 12345",
+          });
+      } else {
+          res.status(200).json({
+          message: "NIM Lain",
+          });
+      }
+  });
+
+  module.exports = router;
+  ```
+
+  Maka jika kita melakukan request post menggunakan url `http://localhost:2023/mahasiswa` dan membuat body request berikut:
+
+  ```
+  {
+      "nim": "12345",
+      "nama": "Uchiha Itachi "
+  }
+  ```
+
+  Akan menghasilkan status 200 dan body response:
+
+  ```
+  {
+      "message": "post method mahasiswa",
+      "data": {
+          "nim": "12345",
+          "nama": "Uchiha Itachi "
+      }
+  }
+  ```
+
 ## Reference
 
-- [[1] Programmer Copy Paste](https://www.youtube.com/watch?v=CNOrmjmK-eM&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=2)
+- [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
+- [[2] santrikoding.com](https://santrikoding.com/tutorial-expressjs-restful-api-4-insert-data-ke-database)
