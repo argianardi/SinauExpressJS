@@ -60,6 +60,92 @@ Terdapat beberapa hal yang harus kita siapkan sebelum membuat project [[1]](http
   }
   ```
 
+## Membuat Routes
+
+Terdapat beberapa langkah yang harus dijalankan dalam membuat routing [[1]](https://www.youtube.com/watch?v=qRXOQ-ahoLA&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=3):
+
+- Buat folder routes untuk menampung semua file yang berkaitan dengan route
+- Di dalam folder routes buat file mahasiswa.js <br>
+  Pada file ini buat inisialisasi express js dan express route, kemudian buat dan export fungsi routing:
+
+  ```
+  const express = require("express");
+  const router = express.Router();
+
+  router.get("/", (req, res, next) => {
+      res.status(200).json({
+          message: "get method mahasiswa",
+      });
+  });
+
+  router.post("/", (req, res, next) => {
+      res.status(200).json({
+          message: "post method mahasiswa",
+      });
+  });
+
+  router.get("/:nim", (req, res, next) => {
+    const nim = req.params.nim;
+    if (nim === "12345") {
+        res.status(200).json({
+        message: "NIM 12345",
+        });
+    } else {
+        res.status(200).json({
+        message: "NIM Lain",
+        });
+    }
+  });
+
+  module.exports = router;
+  ```
+
+- Pada file utama (index) buat function routing untuk mahasiswa dengan menggunakan function routing dari file `mahasiswa.js` yang diimport menggunakan `require`:
+
+  ```
+  const express = require("express");
+  const app = express();
+  //------------------------------------------------
+  const mahasiswaRoutes = require("./routes/mahasiswa");
+
+  app.use('/mahasiswa', mahasiswaRoutes)
+  //------------------------------------------------
+
+  module.exports = app;
+  ```
+
+- Hasilnya saat di postman jika kita mencoba request get dengan url `http://localhost:2023/mahasiswa` akan menghasilkan status 200 dan body response:
+
+  ```
+  {
+    "message": "get method mahasiswa"
+  }
+  ```
+
+  Begitu juga jika kita melakukan request post menggunakan url `http://localhost:2023/mahasiswa` akan menghasilkan status 200 dan body response:
+
+  ```
+  {
+      "message": "post method mahasiswa"
+  }
+  ```
+
+  Jika kita melakukan request get dengan url `http://localhost:2023/mahasiswa/12345` akan menghasilkan status 200 dan body response:
+
+  ```
+  {
+  "message": "NIM 12345"
+  }
+  ```
+
+  Tetapi jika kita melakukan request get menggunakan url dengan nim selain 12345 maka akan menghasilkan status 200 dan body response:
+
+  ```
+  {
+  "message": "NIM Lain"
+  }
+  ```
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/watch?v=CNOrmjmK-eM&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=2)
