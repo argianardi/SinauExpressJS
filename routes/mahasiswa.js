@@ -8,8 +8,13 @@ router.get("/", (req, res, next) => {
 });
 
 router.post("/", (req, res, next) => {
+  const mahasiswa = {
+    nim: req.body.nim,
+    nama: req.body.nama,
+  };
   res.status(200).json({
     message: "post method mahasiswa",
+    data: mahasiswa,
   });
 });
 
