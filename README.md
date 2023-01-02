@@ -25,7 +25,7 @@ Terdapat beberapa hal yang harus kita siapkan sebelum membuat project [[1]](http
 - Install expressJS dengan command `npm install --save express`
 
 - Buat file server.js untuk menghandle server yang akan digunakan untuk project kita <br>
-  Pada file server buat blok code berikut:
+  Pada file server buat blok code berikut [[3]](https://github.com/argianardi/SinauExpressJS/blob/projectCRUD/server.js):
 
   ```
   const http = require("http");
@@ -297,7 +297,7 @@ Berikut langkah - langkah untuk melakukan koneksi ke mysql [[1]](https://www.you
     host: "localhost",
     user: "root",
     password: "zero",
-    database: "mysql",
+    database: "kuliah",
   });
 
   con.connect(function (error) {
@@ -311,7 +311,182 @@ Berikut langkah - langkah untuk melakukan koneksi ke mysql [[1]](https://www.you
 - Running file mysql.js menggunakan nodemon dengan command `nodemon mysql.js` <br>
   Setelah dirunning akan di log akan tampil `Koneksi berhasil` sebagai tanda bahwa kita telah berhasil melakukan koneksi ke mysql.
 
+## GET Database MYSQL
+
+Untuk bisa melakukan request get data dari database mysql, lakukan langkah - langkah berikut [[1]](https://www.youtube.com/watch?v=Y3Pi3LoxC34&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=7):
+
+- import database yang akan kita gunakan (di contoh di file mysql.js di dalam folder config) di file routes tempat kita akan melakukan reques get (di contoh di file mahasiswa.js di dalam folder routes)
+
+  ```
+  const express = require("express");
+  const router = express.Router();
+  //-------------------------------------------------------
+  const db = require("../config/mysql");
+  //-------------------------------------------------------
+
+  router.get("/", (req, res, next) => {
+    res.status(200).json({
+      message: "get method mahasiswa",
+    });
+  });
+
+  router.post("/", (req, res, next) => {
+    const mahasiswa = {
+      nim: req.body.nim,
+      nama: req.body.nama,
+    };
+    res.status(200).json({
+      message: "post method mahasiswa",
+      data: mahasiswa,
+    });
+  });
+
+  router.get("/:nim", (req, res, next) => {
+    const nim = req.params.nim;
+    if (nim === "12345") {
+      res.status(200).json({
+        message: "NIM 12345",
+      });
+    } else {
+      res.status(200).json({
+        message: "NIM Lain",
+      });
+    }
+  });
+
+  module.exports = router;
+  ```
+
+- Buat query mysql dan responsenya di dalam routing function dengan request get [[3]](https://github.com/argianardi/SinauExpressJS/blob/getDataBaseMYSQL/routes/mahasiswa.js).
+
+  ```
+  const express = require("express");
+  const router = express.Router();
+  const db = require("../config/mysql");
+
+  //----------------------------------------------------------
+  router.get("/", (req, res, next) => {
+    var sql = "SELECT * FROM mahasiswa";
+    db.query(sql, (err, result) => {
+      if (err) throw err;
+      res.status(200).json({
+        message: "get method mahasiswa",
+        data: result,
+      });
+    });
+  });
+  //----------------------------------------------------------
+
+  router.post("/", (req, res, next) => {
+    const mahasiswa = {
+      nim: req.body.nim,
+      nama: req.body.nama,
+    };
+    res.status(200).json({
+      message: "post method mahasiswa",
+      data: mahasiswa,
+    });
+  });
+
+  router.get("/:nim", (req, res, next) => {
+    const nim = req.params.nim;
+    if (nim === "12345") {
+      res.status(200).json({
+        message: "NIM 12345",
+      });
+    } else {
+      res.status(200).json({
+        message: "NIM Lain",
+      });
+    }
+  });
+
+  module.exports = router;
+  ```
+
+  Sehingga jika kita melakukan request get menggunakan url `http://localhost:2023/mahasiswa` di postman akan menghasilkan status 200 dan body response sesuai dengan data yang telah kita insert di table dalam data base yang kita buat sebelumnya (di contoh menggunakan table mahasiswa dan databases mahasiswa) seperti ini:
+
+  ```
+  {
+      "message": "get method mahasiswa",
+      "data": [
+          {
+              "nim": 1,
+              "nama": "Itachi",
+              "jurusan": "Sistem Informasi"
+          },
+          {
+              "nim": 2,
+              "nama": "Hidan",
+              "jurusan": "Sistem Informasi"
+          }
+      ]
+  }
+  ```
+
+  Kita juga bisa melakukan setting get request untuk mendapatkan data satu mahasiswa berdasarkan nimnya [[3]](https://github.com/argianardi/SinauExpressJS/blob/getDataBaseMYSQL/routes/mahasiswa.js):
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/mysql");
+
+router.get("/", (req, res, next) => {
+  var sql = "SELECT * FROM mahasiswa";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "get method mahasiswa",
+      data: result,
+    });
+  });
+});
+
+router.post("/", (req, res, next) => {
+  const mahasiswa = {
+    nim: req.body.nim,
+    nama: req.body.nama,
+  };
+  res.status(200).json({
+    message: "post method mahasiswa",
+    data: mahasiswa,
+  });
+});
+
+//----------------------------------------------------------------
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+//----------------------------------------------------------------
+
+module.exports = router;
+```
+
+Hasilnya jika kita melakukan reques get dengan url `http://localhost:2023/mahasiswa/1` akan menghasilkan status 200 dan response body data mahasiswa yang memiliki nim 1, yang sebelumnya sudah kita insert datanya di table mahasiswa dalam database kuliah:
+
+```
+{
+    "message": "Mahasiswa ditemukan",
+    "data": [
+        {
+            "nim": 1,
+            "nama": "Itachi",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
 - [[2] santrikoding.com](https://santrikoding.com/tutorial-expressjs-restful-api-4-insert-data-ke-database)
+- [[3] https://github.com/argianardi/SinauExpressJS/](https://github.com/argianardi/SinauExpressJS/)
