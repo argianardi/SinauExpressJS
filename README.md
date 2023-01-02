@@ -426,6 +426,163 @@ Untuk bisa melakukan request get data dari database mysql, lakukan langkah - lan
 
   Kita juga bisa melakukan setting get request untuk mendapatkan data satu mahasiswa berdasarkan nimnya [[3]](https://github.com/argianardi/SinauExpressJS/blob/getDataBaseMYSQL/routes/mahasiswa.js):
 
+  ```
+  const express = require("express");
+  const router = express.Router();
+  const db = require("../config/mysql");
+
+  router.get("/", (req, res, next) => {
+    var sql = "SELECT * FROM mahasiswa";
+    db.query(sql, (err, result) => {
+      if (err) throw err;
+      res.status(200).json({
+        message: "get method mahasiswa",
+        data: result,
+      });
+    });
+  });
+
+  router.post("/", (req, res, next) => {
+    const mahasiswa = {
+      nim: req.body.nim,
+      nama: req.body.nama,
+    };
+    res.status(200).json({
+      message: "post method mahasiswa",
+      data: mahasiswa,
+    });
+  });
+
+  //----------------------------------------------------------------
+  router.get("/:nim", (req, res, next) => {
+    const nim = req.params.nim;
+    var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+    db.query(sql, (err, result) => {
+      if (err) throw err;
+      res.status(200).json({
+        message: "Mahasiswa ditemukan",
+        data: result,
+      });
+    });
+  });
+  //----------------------------------------------------------------
+
+  module.exports = router;
+  ```
+
+  Hasilnya jika kita melakukan reques get dengan url `http://localhost:2023/mahasiswa/1` akan menghasilkan status 200 dan response body data mahasiswa yang memiliki nim 1, yang sebelumnya sudah kita insert datanya di table mahasiswa dalam database kuliah:
+
+  ```
+  {
+      "message": "Mahasiswa ditemukan",
+      "data": [
+          {
+              "nim": 1,
+              "nama": "Itachi",
+              "jurusan": "Sistem Informasi"
+          }
+      ]
+  }
+  ```
+
+## CRUD MYSQL
+
+### Create
+
+Untuk `create` ini bisa dilakukan menggunakan request post [[3]](https://github.com/argianardi/SinauExpressJS/blob/CRUDmysql/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/mysql");
+
+router.get("/", (req, res, next) => {
+  var sql = "SELECT * FROM mahasiswa";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "get method mahasiswa",
+      data: result,
+    });
+  });
+});
+
+//-------------------------------------------------------------------------------------
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" + nama + "', '" + jurusan + "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+//-------------------------------------------------------------------------------------
+
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+
+module.exports = router;
+```
+
+Hasilnya jika kita melakukan request post di postman menggunakan url `http://localhost:2023/mahasiswa` menggunakan body request:
+
+```
+{
+    "nama": "Deidara",
+    "jurusan": "Sistem Informasi"
+}
+```
+
+Akan menghasilkan response 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil ditambahkan"
+}
+```
+
+Dan data baru yang kita post tersebut bisa kita check dengan menggunakan request get menggunakan url `http://localhost:2023/mahasiswa` akan menghasilkan response status 200 dan body response:
+
+```
+{
+    "message": "get method mahasiswa",
+    "data": [
+        {
+            "nim": 1,
+            "nama": "Itachi",
+            "jurusan": "Sistem Informasi"
+        },
+        {
+            "nim": 2,
+            "nama": "Hidan",
+            "jurusan": "Sistem Informasi"
+        },
+        {
+            "nim": 3,
+            "nama": "Deidara",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
+### Update
+
+Untuk Update data bisa dilakukan menggunakan request put. Pada request put ini membutuhkan body request yang nantinya digunakan untuk merubah data yang diinginkan, ini contohnya [[3]](https://github.com/argianardi/SinauExpressJS/blob/CRUDmysql/routes/mahasiswa.js):
+
 ```
 const express = require("express");
 const router = express.Router();
@@ -443,17 +600,22 @@ router.get("/", (req, res, next) => {
 });
 
 router.post("/", (req, res, next) => {
-  const mahasiswa = {
-    nim: req.body.nim,
-    nama: req.body.nama,
-  };
-  res.status(200).json({
-    message: "post method mahasiswa",
-    data: mahasiswa,
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" +
+    nama +
+    "', '" +
+    jurusan +
+    "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
   });
 });
 
-//----------------------------------------------------------------
 router.get("/:nim", (req, res, next) => {
   const nim = req.params.nim;
   var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
@@ -465,25 +627,189 @@ router.get("/:nim", (req, res, next) => {
     });
   });
 });
-//----------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------------------
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql =
+    "UPDATE mahasiswa SET nama = '" + nama + "', jurusan = '" + jurusan + "' WHERE nim = " + nim;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+//-------------------------------------------------------------------------------------------------------------
 
 module.exports = router;
 ```
 
-Hasilnya jika kita melakukan reques get dengan url `http://localhost:2023/mahasiswa/1` akan menghasilkan status 200 dan response body data mahasiswa yang memiliki nim 1, yang sebelumnya sudah kita insert datanya di table mahasiswa dalam database kuliah:
+Misalnya kita ingin mengubah data untuk mahasiswa yang nimnya 2, ini dilakukan menggunakan request put dan url `http://localhost:2023/mahasiswa/2` serta body request:
+
+```
+{
+    "nama": "Kisame",
+    "jurusan": "Sistem Informasi"
+}
+```
+
+Maka akan menghasilkan response status 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil diupdate"
+}
+```
+
+Untuk melihat hasil data yang diupdate dapat dilihat menggunakan request get mahasiswa dan url berdasarkan nimnya, misalnya kita tadi mengupdate data mahasiswa yang nimnya 2 makan gunakan request get menggunakan url `http://localhost:2023/mahasiswa/2` hasilnya akan terlihat seperti ini:
 
 ```
 {
     "message": "Mahasiswa ditemukan",
     "data": [
         {
-            "nim": 1,
-            "nama": "Itachi",
+            "nim": 2,
+            "nama": "Kisame",
             "jurusan": "Sistem Informasi"
         }
     ]
 }
 ```
+
+Terlihat terjadi perubahan data di bagian namanya, yang sebelumnya seperti ini:
+
+```
+{
+    "message": "Mahasiswa ditemukan",
+    "data": [
+        {
+            "nim": 2,
+            "nama": "Hidan",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
+### Delete
+
+Untuk menghapus data mahasiswa kita dapat melakukannya menggunakan request Delete. Pada method delete ini membutuhkan url yang spesifik / unique untuk mereference data yang dihapus biasanya menggunakan id, dicontoh ini menggunakan nim [[3]](https://github.com/argianardi/SinauExpressJS/blob/CRUDmysql/routes/mahasiswa.js):
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/mysql");
+
+router.get("/", (req, res, next) => {
+  var sql = "SELECT * FROM mahasiswa";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "get method mahasiswa",
+      data: result,
+    });
+  });
+});
+
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" +
+    nama +
+    "', '" +
+    jurusan +
+    "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql =
+    "UPDATE mahasiswa SET nama = '" +
+    nama +
+    "', jurusan = '" +
+    jurusan +
+    "' WHERE nim = " +
+    nim;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+
+//-----------------------------------------------------------------
+router.delete("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  });
+});
+//-----------------------------------------------------------------
+
+module.exports = router;
+```
+
+Misalnya kita ingin menghapus data mahasiswa yang nimnya 3, dapat dilakukan dengan request delete dan url `http://localhost:2023/mahasiswa/3`. Hasilnya akan tampil respon status 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil dihapus"
+}
+```
+
+Untuk melihat hasilnya kita bisa melakukan request get semua data mahasiswa dengan url `http://localhost:2023/mahasiswa`. Hasilnya akan tampil respon status 200 dan body response:
+
+```
+{
+    "message": "get method mahasiswa",
+    "data": [
+        {
+            "nim": 1,
+            "nama": "Itachi",
+            "jurusan": "Sistem Informasi"
+        },
+        {
+            "nim": 2,
+            "nama": "Kisame",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
+Terlihat data mahasiswa dengan nim 3 sudah terhapus.
 
 ## Reference
 
