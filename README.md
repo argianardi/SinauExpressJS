@@ -1145,6 +1145,280 @@ app.use((error, req, res, next) => {
 module.exports = app;
 ```
 
+## ORM (Object Relational Mapping)
+
+ORM adalah teknik untuk mengeksekusi data base menjadi object tanpa menggunakan query [[1]](https://www.youtube.com/watch?v=FebHGa5-bL4&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=10). Untuk bisa menggunakannya kita membutuhkan package sequilize, jadi kita harus install sequelize dan mysql2:
+
+```
+npm install sequelize mysql2
+```
+
+Untuk mempermudah penggunaannya kita buat folder baru di dalam folder `config`, yaitu folder `database` untuk setting database dan folder `model` untuk setting model. Kemudian pindahkan file `mysql.js` (file yang berisi code untuk setting connect ke database) yang sudah kita buat sebelumnya ke dalam folder `database`. Selanjutnya baru kita buat code untuk membuat koneksi ke `mysql` menggunakan `sequilize` di file `mysql.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/config/database/mysql.js):
+
+```
+let Sequelize = require("sequelize");
+
+let db = new Sequelize("kuliah", "root", "zero", {
+  dialect: "mysql",
+  host: "localhost",
+});
+
+module.exports = db;
+```
+
+<i>Note:</i>
+
+- kuliah adalah nama database yang kita gunakan
+- root adalah user name
+- zero adalah password untuk koneksi ke database
+
+Selanjutnya di dalam folder `model`, kita buat model yang digunakan untuk mendefine table di database kita. Pertama, kita buat file dengan nama table yang kita gunakan yaitu `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/config/model/mahasiswa.js).
+
+```
+  //inisialisasi sequelize
+const Sequelize = require("sequelize");
+  //inisialisasi database
+const db = require("../database/mysql");
+
+  //Define table mahasiswa
+let mahasiswa = db.define(
+  "mahasiswa",
+  {
+    nim: Sequelize.INTEGER,
+    nama: Sequelize.STRING,
+    jurusan: Sequelize.STRING,
+  },
+  {
+    freezeTableName: true,
+    timestamp: false,
+  }
+);
+
+mahasiswa.removeAttribute("id");
+module.exports = mahasiswa;
+```
+
+Berikut hal - hal yang dilakukan code diatas:
+
+- Inisialisasi sequelize
+- Inisialisasi konfigurasi data base yang kita buat (tepat di dalam file `mysql.js` yang tersimpan di folder `config/database`)
+- Define table mahasiswa <br>
+  Didalamnya terdapat dari code object:
+
+  ```
+  {
+    nim: Sequelize.INTEGER,
+    nama: Sequelize.STRING,
+    jurusan: Sequelize.STRING,
+  },
+  ```
+
+  Maksudnya untuk mendefine tipe datas field - field yang ada di dalam table `mahasiswa`.
+
+  Selanjutnya terdapat juga code object:
+
+  ```
+  {
+    freezeTableName: true,
+    timestamp: false,
+  }
+  ```
+
+  Maksud dari `freezeTableName: true` untuk mencegah penambahan huruf 's'saat kita memanggil sebuah table di dalam database. Karena secara default `sequelize` ini ketika memanggil table dibelakangnya akan terjadi penambahan huruf 's', misalnya kita akan memanggil table `mahasiswa` ini secara default akan berubah menjadi `mahasiswas`. Sedangkan `timestamp: false` digunakan untuk mencegah pemanggilan field createAt dan updateAt oleh Sequelize. Karena secara default `Sequelize` juga akan memanggil field yang bernama createAt (berisi data waktu field dibuat) dan updateAt (berisi data waktu field diupdate) karena ditable kita tidak ada jadi kita setting false.
+
+  Terakhir `mahasiswa.removeAttribute("id");` dimaksudkan untuk mencegah `Sequelize` yang secara default akan memanggil field id dari table yang kita define (mahasiswa). Karena di table kita tidak ad field id jadi kita remove attribute id nya.
+
+Selanjutnya kita buat file `index.js` di dalam folder model untuk menampung semua model yang kita buat [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/config/model/index.js).
+
+```
+  //import table
+const mahasiswa = require("./mahasiswa");
+const model = {};
+
+  //membuat model table
+model.mahasiswa = mahasiswa;
+  //export model
+module.exports = model;
+```
+
+Terdapat beberapa bagian dari code diatas:
+
+- Import table <br>
+  Untuk mengimport table - table yang akan dijadikan model.
+- Membuat model untuk table <br>
+  Untuk membuat model untuk table yang sebelumnya telah kita import yang nantinaya kaan di jadiakn value untuk object model yang telah didefine di code `const model = {}`
+- Export model <br>
+  Untuk mengexport model yang telah kita buat agar bisa digunakan di file lain.
+
+Selanjutnya di root directory kita buat folder `controller` dan di dalamnya kita buat file `mahasiswa.js` kita buat function untuk request get semua data mahasiswa [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+    //import model
+const model = require("../config/model/index");
+const controller = {};
+
+controller.getAll = async function (req, res) {
+  try {
+    await model.mahasiswa.findAll().then((result) => {
+      if (result.length > 0) {
+        res.status(200).json({
+          message: "Get method mahasiswa",
+          data: result,
+        });
+      } else {
+        res.status(200).json({
+          message: "Mahasiswa not found",
+          data: [],
+        });
+      }
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+module.exports = controller;
+```
+
+Selanjutnya di dalam folder controller kita buat file `index.js` untuk menampung semua file yang kita buat [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/index.js).
+
+```
+  //import controller
+const mahasiswa = require("./mahasiswa");
+const controller = {};
+
+  //menambahkan controller
+controller.mahasiswa = mahasiswa;
+  //export controller
+module.exports = controller;
+```
+
+Terdapat beberapa bagian dari code diatas:
+
+- Import controller <br>
+  Untuk mengimport controller - controller yang akan ditampung dan dijadikan satu di file `index.js` ini.
+- Menambahkan controller <br>
+  Untuk menambahkan controller yang sebelumnya telah kita import yang nantinaya akan di jadikan value untuk object controller yang telah didefine di code `const controller = {}`
+- Export controller <br>
+  Untuk mengexport controller agar bisa digunakan di file lain.
+
+Selanjutnya kita masuk ke folder `router` di file `mahasiswa.js`, kita coba lakukan request get semua data mahasiswa menggunakan function orm yang kita buat di folder `controller` di file `mahasiswa.js` bagian function `getAll`. Kita bisa gantikan function request get yang sebelumnya dilakukan menggunakan querry, ganti dengan function `getAll`. Untuk mengguanakan function `getAll` kita harus menginputkan controller yang kita buat di file `index.js` (tersimpan di folder `controller`).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+//----------------------------------------------------------------
+const controller = require("../controller/index");
+
+router.get("/", controller.mahasiswa.getAll);
+//----------------------------------------------------------------
+
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" +
+    nama +
+    "', '" +
+    jurusan +
+    "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql =
+    "UPDATE mahasiswa SET nama = '" +
+    nama +
+    "', jurusan = '" +
+    jurusan +
+    "' WHERE nim = " +
+    nim;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+
+router.delete("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  });
+});
+
+router.get("/filter/by", (req, res, next) => {
+  const nama = req.query.nama;
+  var sql = `SELECT * FROM mahasiswa WHERE nama= ${nama}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: result,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+        data: result,
+      });
+    }
+  });
+});
+
+module.exports = router;
+```
+
+Hasilnya jika kita melakukan request get menggunakan url `http://localhost:2023/mahasiswa` di postman hasilnya akan tampil status 200 dan body response:
+
+```
+{
+    "message": "Get method mahasiswa",
+    "data": [
+        {
+            "nim": 1,
+            "nama": "Itachi",
+            "jurusan": "Sistem Informasi"
+        },
+        {
+            "nim": 2,
+            "nama": "Kisame",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
