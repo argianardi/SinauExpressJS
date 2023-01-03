@@ -1,4 +1,4 @@
-const Sequelize = require("sequilize");
+const Sequelize = require("sequelize");
 const db = require("../database/mysql");
 
 let mahasiswa = db.define(
@@ -10,7 +10,7 @@ let mahasiswa = db.define(
   },
   {
     freezeTableName: true,
-    timestamp: false,
+    timestamps: false,
   }
 );
 
