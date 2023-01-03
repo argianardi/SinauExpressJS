@@ -811,8 +811,344 @@ Untuk melihat hasilnya kita bisa melakukan request get semua data mahasiswa deng
 
 Terlihat data mahasiswa dengan nim 3 sudah terhapus.
 
+## Request Parameters, Request query dan Request Body
+
+### Request Parameters (req.params)
+
+req.params adalah cara yang biasa digunakan untuk menangkap value yang dikirim ke url atau path [[4]](https://himasis.org/artikel/242-materi-membuat-restful-api-dengan-express-js-bagian-3-komunikasi-server). Properti ini berisi objek yang dikirimkan / dipetakkan ke “parameters” dalam path route function. Seperti pada contoh ini kita gunakan nim sebagai req.params [[3]](https://github.com/argianardi/SinauExpressJS/blob/reqQueryParamBody/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/mysql");
+
+router.get("/", (req, res, next) => {
+  var sql = "SELECT * FROM mahasiswa";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "get method mahasiswa",
+      data: result,
+    });
+  });
+});
+
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" + nama + "', '" + jurusan + "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+
+//--------------------------------------------------------------
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql = "UPDATE mahasiswa SET nama = '" + nama + "', jurusan = '" + jurusan + "' WHERE nim = " + nim;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+router.delete("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  });
+});
+//--------------------------------------------------------------
+
+module.exports = router;
+```
+
+Sehingga dengan adanya req.params ini kita bisa mendapatkan, mengupdate dan menghapus data mahasiswa berdasarkan nimnya. Misalnya kita ingin mendapatkan data mahasiswa yang nimnya 1 bisa dilakukan dengan get request menggunakan url `server/mahasiswa/1`, hasilnya kita akan mendapatkan body response data mahasiswa yang nimnya 1 seperti ini:
+
+```
+{
+    "message": "Mahasiswa ditemukan",
+    "data": [
+        {
+            "nim": 1,
+            "nama": "Itachi",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
+Properti “nim” tersebut disebut sebagai parameters. Untuk dapat menggunakan nya maka menggunakan kode req.params.nim. req.params ini biasanya digunakan untuk mendapat data detail berdasarkan id, updating data (method put),dan hapus data (method delete) pada database [[4]](https://himasis.org/artikel/242-materi-membuat-restful-api-dengan-express-js-bagian-3-komunikasi-server).
+
+### Request Query (req.query)
+
+req.query adalah cara untuk mengirimkan data atau value melalui URL dengan menggunakan key/query string tertentu. Properti ini adalah objek yang berisi parameter string query pada route. Jika tidak ada query string yang dikirimkan maka akan didapati objek kosong {}. Req.query diawali dengan tanda “?” dan dinamai sesuai dengan variable yang dibutuhkan [[4]](https://himasis.org/artikel/242-materi-membuat-restful-api-dengan-express-js-bagian-3-komunikasi-server). Misalnya kita ingin menjadikan nama mahasiswa sebagai query, berikut contoh penggunaannya [[3]](https://github.com/argianardi/SinauExpressJS/blob/reqQueryParamBody/routes/mahasiswa.js):
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/mysql");
+
+router.get("/", (req, res, next) => {
+  var sql = "SELECT * FROM mahasiswa";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "get method mahasiswa",
+      data: result,
+    });
+  });
+});
+
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql = "INSERT INTO mahasiswa (nama, jurusan)  values ('" + nama + "', '" + jurusan + "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql =
+    "UPDATE mahasiswa SET nama = '" + nama + "',  = '" + jurusan + "' WHERE nim = " + nim;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+
+router.delete("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  });
+});
+
+//-------------------------------------------------------------
+router.get("/filter/by", (req, res, next) => {
+  const nama = req.query.nama;
+  var sql = `SELECT * FROM mahasiswa WHERE nama= ${nama}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: result,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+        data: result,
+      });
+    }
+  });
+});
+//-------------------------------------------------------------
+
+module.exports = router;
+```
+
+Untuk penggunaannya kita bisa melakukan request get di postman menggunakan url `http://localhost:2023/mahasiswa/filter/by` kemudian tambahkan nama sebagai query dibagian Query Params seperti ini:
+
+<p align='center'>
+<img src='img/reqQuery.png' alt='request query'/>
+</p>
+
+req.query ini biasanya digunakan untuk fitur filter data yang terdapat pada database. Dan jika kita menggunakan value querry(nama) yang tidak ada di dalam data base hasilnya akan seperti ini:
+
+```
+{
+    "message": "Data mahasiswa tidak ditemukan",
+    "data": []
+}
+```
+
+### Request Body (req.body)
+
+req.body berfungsi untuk menangkap nilai yang dikirimkan melalui form-html (interface). untuk menggunakan req.body sendiri kita harus memanggil library body-parser. body-parser adalah library untuk menangani application/x-www-form-urlencoded (data json yang dikirim melalui form-html/interface) [[5]](https://medium.com/@musliadi/apa-perbedaan-req-body-req-params-req-query-pada-nodejs-eb3450914447). Kita juga telah menggunakan req.body di contoh sebelumnya tepatnya di bagian request post di dalam file mahasiswa.js [[3]](https://github.com/argianardi/SinauExpressJS/blob/reqQueryParamBody/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/mysql");
+
+router.get("/", (req, res, next) => {
+  var sql = "SELECT * FROM mahasiswa";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "get method mahasiswa",
+      data: result,
+    });
+  });
+});
+
+//----------------------------------------------------------------------------------------------------
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" + nama + "', '" + jurusan + "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+//----------------------------------------------------------------------------------------------------
+
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql =
+    "UPDATE mahasiswa SET nama = '" +
+    nama +
+    "', jurusan = '" +
+    jurusan +
+    "' WHERE nim = " +
+    nim;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+
+router.delete("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  });
+});
+
+router.get("/filter/by", (req, res, next) => {
+  const nama = req.query.nama;
+  var sql = `SELECT * FROM mahasiswa WHERE nama= ${nama}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+
+module.exports = router;
+```
+
+Untuk inisialisasi `body-parser` dilakukan di bagian file `index.js` (file utama project) [[3]](https://github.com/argianardi/SinauExpressJS/blob/reqQueryParamBody/index.js).
+
+```
+const express = require("express");
+const app = express();
+//-------------------------------------------------------------
+const bodyParser = require("body-parser");
+//-------------------------------------------------------------
+
+const mahasiswaRoutes = require("./routes/mahasiswa");
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use("/mahasiswa", mahasiswaRoutes);
+
+app.use((req, res, next) => {
+  const error = new Error("Tidak ditemukan");
+  error.status = 404;
+  next(error);
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: error.message,
+  });
+});
+
+module.exports = app;
+```
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
 - [[2] santrikoding.com](https://santrikoding.com/tutorial-expressjs-restful-api-4-insert-data-ke-database)
 - [[3] https://github.com/argianardi/SinauExpressJS/](https://github.com/argianardi/SinauExpressJS/)
+- [[4] himasis.org](https://himasis.org/artikel/242-materi-membuat-restful-api-dengan-express-js-bagian-3-komunikasi-server)
+- [[5] medium.com/@musliadi](https://medium.com/@musliadi/apa-perbedaan-req-body-req-params-req-query-pada-nodejs-eb3450914447)
