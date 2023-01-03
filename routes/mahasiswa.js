@@ -74,4 +74,23 @@ router.delete("/:nim", (req, res, next) => {
   });
 });
 
+router.get("/filter/by", (req, res, next) => {
+  const nama = req.query.nama;
+  var sql = `SELECT * FROM mahasiswa WHERE nama= ${nama}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: result,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+        data: result,
+      });
+    }
+  });
+});
+
 module.exports = router;
