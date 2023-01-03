@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/mysql");
+const db = require("../config/database/mysql");
 
 router.get("/", (req, res, next) => {
   var sql = "SELECT * FROM mahasiswa";
