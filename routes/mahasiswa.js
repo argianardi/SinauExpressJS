@@ -22,17 +22,7 @@ router.post("/", (req, res, next) => {
   });
 });
 
-router.get("/:nim", (req, res, next) => {
-  const nim = req.params.nim;
-  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.status(200).json({
-      message: "Mahasiswa ditemukan",
-      data: result,
-    });
-  });
-});
+router.get("/:nim", controller.mahasiswa.getOne);
 
 router.put("/:nim", (req, res, next) => {
   const nim = req.params.nim;
