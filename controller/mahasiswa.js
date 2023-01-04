@@ -50,4 +50,23 @@ controller.getOne = async function (req, res) {
   }
 };
 
+// post mahasiswa
+controller.post = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: req.body.nim,
+      nama: req.body.nama,
+      jurusan: req.body.jurusan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+      data: mahasiswa,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = controller;
