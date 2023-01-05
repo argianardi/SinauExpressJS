@@ -1820,7 +1820,7 @@ controller.put = async function (req, res) {
 module.exports = controller;
 ```
 
-Di function `put` di atas terdapat function `update()` milik `sequelize` digunakan untuk mengupdate data dalam database. Di dalam function `update()` membuatuhkan argument berupa req.body yang nantinya akan dikirim ke server untuk merubah data di dalam database.
+Di function `put` di atas terdapat function `update()` milik `sequelize` digunakan untuk mengupdate data dalam database. Di dalam function `update()` membuatuhkan argument berupa req.body yang nantinya akan dikirim ke server untuk merubah data di dalam database dan juga `where` yang berisi req.params untuk dijadikan reference data yang akan diupdate.
 
 Selanjutnya kita import function `post` yang kita buat tadi di bagian `route` yang kita fokuskan di folder `routes` tepatnya di file `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/routes/mahasiswa.js).
 
@@ -1861,6 +1861,169 @@ Hasilnya akan tampil response status 200 dan body response:
 ```
 {
     "message": "Data mahasiswa berhasil diupdate"
+}
+```
+
+### Delete
+
+Untuk melakukan delete request menggunakan ORM kita harus membuat function controllnya di tempat yang sudah kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`. Di contoh ini function controller untuk delete request ini kita beri nama `delete` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+const { mahasiswa } = require(".");
+const model = require("../config/model/index");
+const controller = {};
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// post request
+controller.post = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: req.body.nim,
+      nama: req.body.nama,
+      jurusan: req.body.jurusan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+      data: mahasiswa,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//put request
+controller.put = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.update(
+      {
+        nama: req.body.nama,
+        jurusan: req.body.jurusan,
+      },
+      {
+        where: {
+          nim: req.params.nim,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//--------------------------------------------------------------------------
+// delete request
+controller.delete = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.destroy({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+//--------------------------------------------------------------------------
+
+module.exports = controller;
+```
+
+Di dalam function `delete` itu terdapat function `destroy()` yang merupakan function dari `sequelize`, untuk menghapus data di dalam database. Function `destroy()` ini membuatuhkan argument berupa `where` yang berisi req.params untuk dijadikan sebagai reference data yang akan dihapus.
+
+Selanjutnya kita import function `delete` yang kita buat tadi ke bagian router yang sudah kita fokuskan di folder `routes` tepatnya di file `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+const controller = require("../controller/index");
+
+// get all mahsiswa
+router.get("/", controller.mahasiswa.getAll);
+
+// get one mahasiswa
+router.get("/:nim", controller.mahasiswa.getOne);
+
+//post mahasiswa
+router.post("/", controller.mahasiswa.post);
+
+//put mahasiswa
+router.put("/:nim", controller.mahasiswa.put);
+
+//-------------------------------------------------------------------
+// delete mahasiswa
+router.delete("/:nim", controller.mahasiswa.delete);
+//-------------------------------------------------------------------
+
+module.exports = router;
+```
+
+Sehinggia jika kita ingin menghapus data mahasiswa yang nimnya 1 kita bisa melakukan delete request di postman menggunakan url `http://localhost:2023/mahasiswa/1`. Hasilnya akan tampil response 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil dihapus"
 }
 ```
 

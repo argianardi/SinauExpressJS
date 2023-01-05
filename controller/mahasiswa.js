@@ -95,4 +95,22 @@ controller.put = async function (req, res) {
   }
 };
 
+// delete request
+controller.delete = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.destroy({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = controller;

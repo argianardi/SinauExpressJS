@@ -15,4 +15,7 @@ router.post("/", controller.mahasiswa.post);
 //put mahasiswa
 router.put("/:nim", controller.mahasiswa.put);
 
+// delete mahasiswa
+router.delete("/:nim", controller.mahasiswa.delete);
+
 module.exports = router;
