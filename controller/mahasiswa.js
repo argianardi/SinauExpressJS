@@ -1,3 +1,4 @@
+const { mahasiswa } = require(".");
 const model = require("../config/model/index");
 const controller = {};
 
@@ -50,7 +51,7 @@ controller.getOne = async function (req, res) {
   }
 };
 
-// post mahasiswa
+// post request
 controller.post = async function (req, res) {
   try {
     let mahasiswa = await model.mahasiswa.create({
@@ -61,6 +62,31 @@ controller.post = async function (req, res) {
     res.status(201).json({
       message: "Data mahasiswa berhasil ditambahkan",
       data: mahasiswa,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//put request
+controller.put = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.update(
+      {
+        nama: req.body.nama,
+        jurusan: req.body.jurusan,
+      },
+      {
+        where: {
+          nim: req.params.nim,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
     });
   } catch (error) {
     res.status(404).json({

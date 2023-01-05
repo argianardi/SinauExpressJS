@@ -12,4 +12,7 @@ router.get("/:nim", controller.mahasiswa.getOne);
 //post mahasiswa
 router.post("/", controller.mahasiswa.post);
 
+//put mahasiswa
+router.put("/:nim", controller.mahasiswa.put);
+
 module.exports = router;

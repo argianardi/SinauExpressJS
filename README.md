@@ -1589,7 +1589,7 @@ Tetapi jika kita melakukan get request menggunakan url dengan req.params yang va
 
 ### Post
 
-Untuk bisa mekukan post request menggunakan ORM, pertama kita harus membuat function controllernya. Function ini kita buat di bagian controller yang kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`, functionnya kita berinama 'post' [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+Untuk bisa mekukan post request menggunakan ORM, pertama kita harus membuat function controllernya. Function ini kita buat di bagian controller yang kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`, dicontoh ini functionnya kita beri nama `post` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
 
 ```
 const model = require("../config/model/index");
@@ -1710,6 +1710,157 @@ Maka hasilnya akan tampil response status 201 (aturan standar yang menunjukkan b
         "nama": "Nashr Alfarabi",
         "jurusan": "Kedokteran"
     }
+}
+```
+
+### Put
+
+Untuk bisa menjalankan put request menggunakan ORM, kita harus membuat function controllernya yang sudah kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`. Di contoh ini function controller untuk put request ini kita beri nama `put` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+const { mahasiswa } = require(".");
+const model = require("../config/model/index");
+const controller = {};
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// post request
+controller.post = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: req.body.nim,
+      nama: req.body.nama,
+      jurusan: req.body.jurusan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+      data: mahasiswa,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//-------------------------------------------------------------------
+//put request
+controller.put = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.update(
+      {
+        nama: req.body.nama,
+        jurusan: req.body.jurusan,
+      },
+      {
+        where: {
+          nim: req.params.nim,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+//-------------------------------------------------------------------
+
+module.exports = controller;
+```
+
+Di function `put` di atas terdapat function `update()` milik `sequelize` digunakan untuk mengupdate data dalam database. Di dalam function `update()` membuatuhkan argument berupa req.body yang nantinya akan dikirim ke server untuk merubah data di dalam database.
+
+Selanjutnya kita import function `post` yang kita buat tadi di bagian `route` yang kita fokuskan di folder `routes` tepatnya di file `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+const controller = require("../controller/index");
+
+// get all mahsiswa
+router.get("/", controller.mahasiswa.getAll);
+
+// get one mahasiswa
+router.get("/:nim", controller.mahasiswa.getOne);
+
+//post mahasiswa
+router.post("/", controller.mahasiswa.post);
+
+//------------------------------------------------------------------
+//put mahasiswa
+router.put("/:nim", controller.mahasiswa.put);
+//------------------------------------------------------------------
+
+module.exports = router;
+```
+
+Selanjutnya jika kita ingin mengupdate data mahasiswa yang nimnya 2, kita bisa melakukan put di postman menggunakan url `http://localhost:2023/mahasiswa/2` dan req.body:
+
+```
+{
+    "nama": "Alkhawarizmi",
+    "jurusan": "Matematic"
+}
+```
+
+Hasilnya akan tampil response status 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil diupdate"
 }
 ```
 
