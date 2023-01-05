@@ -59,6 +59,7 @@ controller.post = async function (req, res) {
       message: "Some input are required",
     });
   }
+
   try {
     let mahasiswa = await model.mahasiswa.create({
       nim: nim,
@@ -79,14 +80,21 @@ controller.post = async function (req, res) {
 
 //put request
 controller.put = async function (req, res) {
+  const { nim, nama, jurusan, alamat, angkatan } = req.body;
+  if (!(nim || nama || jurusan || alamat || angkatan)) {
+    return res.status(400).json({
+      message: "Some input are required",
+    });
+  }
+
   try {
     let mahasiswa = await model.mahasiswa.update(
       {
-        nim: req.body.nim,
-        nama: req.body.nama,
-        kd_jurusan: req.body.kd_jurusan,
-        alamat: req.body.alamat,
-        angkatan: req.body.angkatan,
+        nim: nim,
+        nama: nama,
+        jurusan: jurusan,
+        alamat: alamat,
+        angkatan: angkatan,
       },
       {
         where: {
