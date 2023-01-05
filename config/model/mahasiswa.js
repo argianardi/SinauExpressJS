@@ -6,7 +6,7 @@ let mahasiswa = db.define(
   {
     nim: Sequelize.INTEGER,
     nama: Sequelize.STRING,
-    kd_jurusan: Sequelize.STRING,
+    jurusan: Sequelize.STRING,
     alamat: Sequelize.STRING,
     angkatan: Sequelize.STRING,
   },
