@@ -54,7 +54,7 @@ controller.getOne = async function (req, res) {
 // post request
 controller.post = async function (req, res) {
   const { nim, nama, jurusan, alamat, angkatan } = req.body;
-  if (!(nim || nama || jurusan || alamat || angkatan)) {
+  if (!(nim && nama && jurusan && alamat && angkatan)) {
     return res.status(400).json({
       message: "Some input are required",
     });
@@ -81,7 +81,7 @@ controller.post = async function (req, res) {
 //put request
 controller.put = async function (req, res) {
   const { nim, nama, jurusan, alamat, angkatan } = req.body;
-  if (!(nim || nama || jurusan || alamat || angkatan)) {
+  if (!(nim && nama && jurusan && alamat && angkatan)) {
     return res.status(400).json({
       message: "Some input are required",
     });
