@@ -1493,7 +1493,6 @@ Selanjutnya di bagian route (di contoh kita fokuskan di folder `routes`), tepatn
 ```
 const express = require("express");
 const router = express.Router();
-const db = require("../config/database/mysql");
 const controller = require("../controller/index");
 
 router.get("/", controller.mahasiswa.getAll);
@@ -1675,7 +1674,6 @@ Selanjutnya kita import function `post` yang kita buat tadi di bagian `route` ya
 ```
 const express = require("express");
 const router = express.Router();
-const db = require("../config/database/mysql");
 const controller = require("../controller/index");
 
 // get all mahsiswa
@@ -1827,7 +1825,6 @@ Selanjutnya kita import function `post` yang kita buat tadi di bagian `route` ya
 ```
 const express = require("express");
 const router = express.Router();
-const db = require("../config/database/mysql");
 const controller = require("../controller/index");
 
 // get all mahsiswa
@@ -1996,7 +1993,6 @@ Selanjutnya kita import function `delete` yang kita buat tadi ke bagian router y
 ```
 const express = require("express");
 const router = express.Router();
-const db = require("../config/database/mysql");
 const controller = require("../controller/index");
 
 // get all mahsiswa
@@ -2026,6 +2022,277 @@ Sehinggia jika kita ingin menghapus data mahasiswa yang nimnya 1 kita bisa melak
     "message": "Data mahasiswa berhasil dihapus"
 }
 ```
+
+## Setting Alter true
+
+Kita bisa mengatur table yang kita define di bagian model bisa langsung otomatis ke alter dengan menambahkan `alter: true` seperti ini [[3]](https://github.com/argianardi/SinauExpressJS/blob/querySequelize/config/model/mahasiswa.js):
+
+```
+const Sequelize = require("sequelize");
+const db = require("../database/mysql");
+
+let mahasiswa = db.define(
+  "mahasiswa",
+  {
+    nim: Sequelize.INTEGER,
+    nama: Sequelize.STRING,
+    kd_jurusan: Sequelize.STRING,
+    alamat: Sequelize.STRING,
+    angkatan: Sequelize.STRING,
+  },
+  {
+    freezeTableName: true,
+    timestamps: false,
+  }
+);
+
+//----------------------------------------------------------------
+db.sync({ alter: true })
+  .then(() => {
+    console.log("Mahasiswa table created successfully!");
+  })
+  .catch((error) => {
+    console.log("Unable to create table:", error);
+  });
+//----------------------------------------------------------------
+
+mahasiswa.removeAttribute("id");
+module.exports = mahasiswa;
+```
+
+## Query dengan Sequalize
+
+Kita bisa melakukan get request menggunakan query di sequelize [[1]](https://www.youtube.com/watch?v=PKl_HvPV-94&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=12). Untuk melakukannya kita harus membuat function controllernya dulu, di bagian controller (di contoh ini kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`) [[3]](https://github.com/argianardi/SinauExpressJS/blob/querySequelize/controller/mahasiswa.js):
+
+```
+const model = require("../config/model/index");
+const controller = {};
+//-----------------------------------------------------------
+const { Op } = require("sequelize");
+//-----------------------------------------------------------
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// post request
+controller.post = async function (req, res) {
+  const { nim, nama, jurusan, alamat, angkatan } = req.body;
+  if (!(nim && nama && jurusan && alamat && angkatan)) {
+    return res.status(400).json({
+      message: "Some input are required",
+    });
+  }
+
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: nim,
+      nama: nama,
+      jurusan: jurusan,
+      alamat: alamat,
+      angkatan: angkatan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//put request
+controller.put = async function (req, res) {
+  const { nim, nama, jurusan, alamat, angkatan } = req.body;
+  if (!(nim && nama && jurusan && alamat && angkatan)) {
+    return res.status(400).json({
+      message: "Some input are required",
+    });
+  }
+
+  try {
+    let mahasiswa = await model.mahasiswa.update(
+      {
+        nim: nim,
+        nama: nama,
+        jurusan: jurusan,
+        alamat: alamat,
+        angkatan: angkatan,
+      },
+      {
+        where: {
+          nim: req.params.nim,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// delete request
+controller.delete = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.destroy({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//----------------------------------------------------------------------------
+// getSearch (get req use req.query)
+controller.getSearch = async function (req, res) {
+  const search = req.query.keyword;
+
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        [Op.or]: [
+          {
+            nim: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+          {
+            nama: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+        ],
+      },
+    });
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+//----------------------------------------------------------------------------
+
+module.exports = controller;
+```
+
+Di dalam function `findAll()` terdapat `where` dan juga `Op` digunakan untuk mengatru bahwa data yang akan ditampilkan adalah data mahasiswa yang nama dan nimnya sama atau mendekati dengan req.query yang diinputkan oleh saat melakukan request get. `Op` merupakan operator yang digunakan untuk melakukan perbandingan, bawaan dari `sequelize` untuk bisa menggunakannya kita mengimportnya dulu.
+
+Selanjutnya kita inport function controller yang kita buat tadi (`getSearch`) di bagian router yang sudah kita fokuskan di dalam folder `routes` [[3]](https://github.com/argianardi/SinauExpressJS/blob/querySequelize/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const controller = require("../controller/index");
+
+// get all mahsiswa
+router.get("/", controller.mahasiswa.getAll);
+
+//--------------------------------------------------------------------
+// getSearch (get req use req.query)
+router.get("/search", controller.mahasiswa.getSearch);
+//--------------------------------------------------------------------
+
+// get one mahasiswa
+router.get("/:nim", controller.mahasiswa.getOne);
+
+//post mahasiswa
+router.post("/", controller.mahasiswa.post);
+
+//put mahasiswa
+router.put("/:nim", controller.mahasiswa.put);
+
+// delete mahasiswa
+router.delete("/:nim", controller.mahasiswa.delete);
+
+module.exports = router;
+```
+
+Jika kita ingin melakukn get request data berdasarkan namanya dengan keyword `alkha`, karena kita menggunakan req.query urlnya akan jadi `http://localhost:2023/mahasiswa/search?keyword=alkha`. Hasilnya akan tampil response 200 dan body response berupa data mahasiswa yang namanya terdapat kata `alkha`.
+
+```
+{
+    "message": "Data mahasiswa ditemukan",
+    "data": [
+        {
+            "nim": 10001,
+            "nama": "Alkhawarizmi",
+            "jurusan": null,
+            "alamat": "Kufah",
+            "angkatan": "2000"
+        }
+    ]
+}
+```
+
+Atau jika kita ingin melakukan get request data mahasiswa berdasarkan nimnya, karena kita menggunakan req.query urlnya akan jadi `http://localhost:2023/mahasiswa/search?keyword=10002`. Hasilnya akan tampil response 200 dan body response berupa data mahasiswa yang nimnya bernilai 10002.
 
 ## Reference
 
