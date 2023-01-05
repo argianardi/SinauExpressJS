@@ -53,13 +53,19 @@ controller.getOne = async function (req, res) {
 
 // post request
 controller.post = async function (req, res) {
+  const { nim, nama, jurusan, alamat, angkatan } = req.body;
+  if (!(nim || nama || jurusan || alamat || angkatan)) {
+    return res.status(400).json({
+      message: "Some input are required",
+    });
+  }
   try {
     let mahasiswa = await model.mahasiswa.create({
-      nim: req.body.nim,
-      nama: req.body.nama,
-      kd_jurusan: req.body.jurusan_kd,
-      alamat: req.body.alamat,
-      angkatan: req.body.angkatan,
+      nim: nim,
+      nama: nama,
+      jurusan: jurusan,
+      alamat: alamat,
+      angkatan: angkatan,
     });
     res.status(201).json({
       message: "Data mahasiswa berhasil ditambahkan",
