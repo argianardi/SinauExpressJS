@@ -1,96 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/mysql");
+const db = require("../config/database/mysql");
+const controller = require("../controller/index");
 
-router.get("/", (req, res, next) => {
-  var sql = "SELECT * FROM mahasiswa";
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.status(200).json({
-      message: "get method mahasiswa",
-      data: result,
-    });
-  });
-});
+// get all mahsiswa
+router.get("/", controller.mahasiswa.getAll);
 
-router.post("/", (req, res, next) => {
-  const nama = req.body.nama;
-  const jurusan = req.body.jurusan;
-  var sql =
-    "INSERT INTO mahasiswa (nama, jurusan) values ('" +
-    nama +
-    "', '" +
-    jurusan +
-    "')";
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.status(200).json({
-      message: "Data mahasiswa berhasil ditambahkan",
-    });
-  });
-});
+// get one mahasiswa
+router.get("/:nim", controller.mahasiswa.getOne);
 
-router.get("/:nim", (req, res, next) => {
-  const nim = req.params.nim;
-  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.status(200).json({
-      message: "Mahasiswa ditemukan",
-      data: result,
-    });
-  });
-});
+//post mahasiswa
+router.post("/", controller.mahasiswa.post);
 
-router.put("/:nim", (req, res, next) => {
-  const nim = req.params.nim;
-  const nama = req.body.nama;
-  const jurusan = req.body.jurusan;
-  let sql =
-    "UPDATE mahasiswa SET nama = '" +
-    nama +
-    "', jurusan = '" +
-    jurusan +
-    "' WHERE nim = " +
-    nim;
+//put mahasiswa
+router.put("/:nim", controller.mahasiswa.put);
 
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.status(200).json({
-      message: "Data mahasiswa berhasil diupdate",
-    });
-  });
-});
-
-router.delete("/:nim", (req, res, next) => {
-  const nim = req.params.nim;
-  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
-
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.status(200).json({
-      message: "Data mahasiswa berhasil dihapus",
-    });
-  });
-});
-
-router.get("/filter/by", (req, res, next) => {
-  const nama = req.query.nama;
-  var sql = `SELECT * FROM mahasiswa WHERE nama= ${nama}`;
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    if (result.length > 0) {
-      res.status(200).json({
-        message: "Data mahasiswa ditemukan",
-        data: result,
-      });
-    } else {
-      res.status(200).json({
-        message: "Data mahasiswa tidak ditemukan",
-        data: result,
-      });
-    }
-  });
-});
+// delete mahasiswa
+router.delete("/:nim", controller.mahasiswa.delete);
 
 module.exports = router;

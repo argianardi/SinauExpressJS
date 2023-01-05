@@ -1145,6 +1145,888 @@ app.use((error, req, res, next) => {
 module.exports = app;
 ```
 
+## ORM (Object Relational Mapping)
+
+ORM adalah teknik untuk mengeksekusi data base menjadi object tanpa menggunakan query [[1]](https://www.youtube.com/watch?v=FebHGa5-bL4&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=10).
+
+### Setting ORM
+
+Untuk bisa menggunakan ORM terdapat beberapa hal yang harus kita setting [[1]](https://www.youtube.com/watch?v=FebHGa5-bL4&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=10):
+
+- Install `sequelize` <br>
+  Untuk bisa menggunakannya kita membutuhkan package sequilize, jadi kita harus install sequelize dan mysql2:
+
+  ```
+  npm install sequelize mysql2
+  ```
+
+- Konfigurasi database <br>
+  Untuk mempermudah penggunaannya kita buat folder baru di dalam folder `config`, yaitu folder `database` untuk setting database dan folder `model` untuk setting model. Kemudian pindahkan file `mysql.js` (file yang berisi code untuk setting connect ke database) yang sudah kita buat sebelumnya ke dalam folder `database`. Selanjutnya baru kita buat code untuk membuat koneksi ke `mysql` menggunakan `sequilize` di file `mysql.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/config/database/mysql.js):
+
+  ```
+  let Sequelize = require("sequelize");
+
+  let db = new Sequelize("kuliah", "root", "zero", {
+    dialect: "mysql",
+    host: "localhost",
+  });
+
+  module.exports = db;
+  ```
+
+  <i>Note:</i>
+
+  - kuliah adalah nama database yang kita gunakan
+  - root adalah user name
+  - zero adalah password untuk koneksi ke database
+
+- Setting model <br>
+  Untuk model kita fokuskan di folder `model`. Di dalam folder `model`, kita buat model yang digunakan untuk mendefine table di database kita. Di dalam folder `model` kita buat file `index.js` untuk menampung semua model yang kita buat [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/config/model/index.js).
+
+  ```
+    //import table
+  const mahasiswa = require("./mahasiswa");
+  const model = {};
+
+    //membuat model table
+  model.mahasiswa = mahasiswa;
+    //export model
+  module.exports = model;
+  ```
+
+  Kita breakdown beberapa bagian dari code diatas:
+
+  - Import table <br>
+    Untuk mengimport table - table yang akan dijadikan model.
+  - Membuat model untuk table <br>
+    Untuk membuat model untuk table yang sebelumnya telah kita import yang nantinaya kaan di jadiakn value untuk object model yang telah didefine di code `const model = {}`
+  - Export model <br>
+    Untuk mengexport model yang telah kita buat agar bisa digunakan di file lain.
+
+- Define table <br>
+  Langkah selanjutnya define table yang kita gunakan (di contoh ini table mahasiswa), kita buat file dengan nama table yang kita gunakan yaitu `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/config/model/mahasiswa.js).
+
+  ```
+    //inisialisasi sequelize
+  const Sequelize = require("sequelize");
+    //inisialisasi database
+  const db = require("../database/mysql");
+
+    //Define table mahasiswa
+  let mahasiswa = db.define(
+    "mahasiswa",
+    {
+      nim: Sequelize.INTEGER,
+      nama: Sequelize.STRING,
+      jurusan: Sequelize.STRING,
+    },
+    {
+      freezeTableName: true,
+      timestamp: false,
+    }
+  );
+
+  mahasiswa.removeAttribute("id");
+  module.exports = mahasiswa;
+  ```
+
+  Kita breakdown hal - hal yang dilakukan code diatas:
+
+  - Inisialisasi sequelize
+  - Inisialisasi konfigurasi data base yang kita buat (tepat di dalam file `mysql.js` yang tersimpan di folder `config/database`)
+  - Define table mahasiswa <br>
+    Didalamnya terdapat dari code object:
+
+    ```
+    {
+      nim: Sequelize.INTEGER,
+      nama: Sequelize.STRING,
+      jurusan: Sequelize.STRING,
+    },
+    ```
+
+    Maksudnya untuk mendefine tipe datas field - field yang ada di dalam table `mahasiswa`.
+
+    Selanjutnya terdapat juga code object:
+
+    ```
+    {
+      freezeTableName: true,
+      timestamp: false,
+    }
+    ```
+
+    Maksud dari `freezeTableName: true` untuk mencegah penambahan huruf 's'saat kita memanggil sebuah table di dalam database. Karena secara default `sequelize` ini ketika memanggil table dibelakangnya akan terjadi penambahan huruf 's', misalnya kita akan memanggil table `mahasiswa` ini secara default akan berubah menjadi `mahasiswas`. Sedangkan `timestamp: false` digunakan untuk mencegah pemanggilan field createAt dan updateAt oleh Sequelize. Karena secara default `Sequelize` juga akan memanggil field yang bernama createAt (berisi data waktu field dibuat) dan updateAt (berisi data waktu field diupdate) karena ditable kita tidak ada jadi kita setting false.
+
+    Terakhir `mahasiswa.removeAttribute("id");` dimaksudkan untuk mencegah `Sequelize` yang secara default akan memanggil field id dari table yang kita define (mahasiswa). Karena di table kita tidak ad field id jadi kita remove attribute id nya.
+
+- Setting Controller <br>
+  Selanjutnya setting controller, di root directory buat folder `controller` dan di dalamnya buat file `index.js` untuk menampung semua file controller yang kita buat [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/index.js).
+
+  ```
+    //import controller
+  const mahasiswa = require("./mahasiswa");
+  const controller = {};
+
+    //menambahkan controller
+  controller.mahasiswa = mahasiswa;
+    //export controller
+  module.exports = controller;
+  ```
+
+  Terdapat beberapa bagian dari code diatas:
+
+  - Import controller <br>
+    Untuk mengimport controller - controller yang akan ditampung dan dijadikan satu di file `index.js` ini.
+  - Menambahkan controller <br>
+    Untuk menambahkan controller yang sebelumnya telah kita import yang nantinaya akan di jadikan value untuk object controller yang telah didefine di code `const controller = {}`
+  - Export controller <br>
+    Untuk mengexport controller agar bisa digunakan di file lain.
+
+### get Request
+
+Untuk melakukan get request menggunakan ORM kita harus membuat file controller di dalam folder `controller` yang telah kita buat sebelumnya. Kita buat file controller bernama `mahasiswa.js`, di dalamnya buat function untuk request get semua data mahasiswa [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+    //import model
+const model = require("../config/model/index");
+const controller = {};
+
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+module.exports = controller;
+```
+
+Di dalam function `getAll` diatas terdapat function `findAll()`, function ini merupakan function dari `sequelize` yang berfungsi untuk mengambil/menampilkan semua data yang ada didalam table yang kita define.
+
+Selanjutnya kita masuk ke folder `router` di file `mahasiswa.js`, kita coba lakukan request get semua data mahasiswa menggunakan function orm yang kita buat di folder `controller` di file `mahasiswa.js` bagian function `getAll`. Kita bisa gantikan function request get yang sebelumnya dilakukan menggunakan querry, ganti dengan function `getAll`. Untuk mengguanakan function `getAll` kita harus menginputkan controller yang kita buat di file `index.js` (tersimpan di folder `controller`).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+//----------------------------------------------------------------
+const controller = require("../controller/index");
+
+router.get("/", controller.mahasiswa.getAll);
+//----------------------------------------------------------------
+
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" + nama + "', '" + jurusan + "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+
+router.get("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  var sql = `SELECT * FROM mahasiswa WHERE nim = ${nim}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Mahasiswa ditemukan",
+      data: result,
+    });
+  });
+});
+
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql =
+    "UPDATE mahasiswa SET nama = '" + nama + "', jurusan = '" + jurusan + "' WHERE nim = " + nim;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+
+router.delete("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  });
+});
+
+router.get("/filter/by", (req, res, next) => {
+  const nama = req.query.nama;
+  var sql = `SELECT * FROM mahasiswa WHERE nama= ${nama}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: result,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+        data: result,
+      });
+    }
+  });
+});
+
+module.exports = router;
+```
+
+Hasilnya jika kita melakukan request get menggunakan url `http://localhost:2023/mahasiswa` di postman hasilnya akan tampil status 200 dan body response:
+
+```
+{
+    "message": "Get method mahasiswa",
+    "data": [
+        {
+            "nim": 1,
+            "nama": "Itachi",
+            "jurusan": "Sistem Informasi"
+        },
+        {
+            "nim": 2,
+            "nama": "Kisame",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
+### get One Data
+
+Untuk bisa melakukan get request 1 data mengguanakan ORM, kita harus membuat functionnya (di contoh ini kita berinama `getOne`) di bagian controller yang sudah kita fokuskan di folder `controller`tepatnya di file`mahasiswa.js`. Di contoh ini kita akan mebuat function getOne untuk melakukan get request 1 data mahasiswa berdasarkan nimnya [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+const model = require("../config/model/index");
+const controller = {};
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+//--------------------------------------------------------------
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+//--------------------------------------------------------------
+
+module.exports = controller;
+```
+
+Di dalam function `getOne` yang kita buat untuk request get 1 data mahasisiwa terdapat function `findAll()` dari `sequelize` sama seperti di request get all data mahasiswa, yang menjadi pembeda di dalam function `findAll()` tersebut terdapat object `where` untuk mengatur bahwa data yang akan kita get hanya 1 data berdasarkan nimnya, yang mana data nimnya ini kita gunakan sebagai req.params.
+
+Selanjutnya di bagian route (di contoh kita fokuskan di folder `routes`), tepatnya di file `mahasiswa.js` kita importkan function `getOne` tadi [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+const controller = require("../controller/index");
+
+router.get("/", controller.mahasiswa.getAll);
+
+router.post("/", (req, res, next) => {
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  var sql =
+    "INSERT INTO mahasiswa (nama, jurusan) values ('" + nama + "', '" + jurusan + "')";
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  });
+});
+
+//---------------------------------------------------------------------------------------------------
+router.get("/:nim", controller.mahasiswa.getOne);
+//---------------------------------------------------------------------------------------------------
+
+router.put("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  const nama = req.body.nama;
+  const jurusan = req.body.jurusan;
+  let sql =
+    "UPDATE mahasiswa SET nama = '" + nama + "', jurusan = '" + jurusan + "' WHERE nim = " + nim;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  });
+});
+
+router.delete("/:nim", (req, res, next) => {
+  const nim = req.params.nim;
+  let sql = `DELETE FROM mahasiswa WHERE nim = ${nim}`;
+
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  });
+});
+
+router.get("/filter/by", (req, res, next) => {
+  const nama = req.query.nama;
+  var sql = `SELECT * FROM mahasiswa WHERE nama= ${nama}`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: result,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+        data: result,
+      });
+    }
+  });
+});
+
+module.exports = router;
+```
+
+Hasilnya jika kita melakukan get request di postman menggunakan url `http://localhost:2023/mahasiswa/1` akan menghasilkan response status 200 dan body response data mahasiswa yang memiliki nim 1:
+
+```
+{
+    "message": "Data mahasiswa ditemukan",
+    "data": [
+        {
+            "nim": 1,
+            "nama": "Itachi",
+            "jurusan": "Sistem Informasi"
+        }
+    ]
+}
+```
+
+Tetapi jika kita melakukan get request menggunakan url dengan req.params yang value nimnya tidak ada di database, misalnya `http://localhost:2023/mahasiswa/0` (di dalam database tidak ada nim mahasiswa yang bernilai 0) akan menghasilkan response status 200 dan body response:
+
+```
+{
+    "message": "Tidak ada data",
+    "data": []
+}
+```
+
+### Post
+
+Untuk bisa mekukan post request menggunakan ORM, pertama kita harus membuat function controllernya. Function ini kita buat di bagian controller yang kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`, dicontoh ini functionnya kita beri nama `post` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+const model = require("../config/model/index");
+const controller = {};
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//--------------------------------------------------------------
+// post mahasiswa
+controller.post = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: req.body.nim,
+      nama: req.body.nama,
+      jurusan: req.body.jurusan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+      data: mahasiswa,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+//--------------------------------------------------------------
+
+module.exports = controller;
+```
+
+Di dalam function `post` itu terdapat function `create()` yang merupakan function dari `sequelize`, berfungsi untuk melakukan INSERT data ke database. Di dalam function `create()` tersebut membutuhkan argumen berupa object berisi req.body yang akan kita kirim ke server dan selanjutnya disimpan ke database.
+
+Selanjutnya kita import function `post` yang kita buat tadi di bagian `route` yang kita fokuskan di folder `routes` tepatnya di file `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+const controller = require("../controller/index");
+
+// get all mahsiswa
+router.get("/", controller.mahasiswa.getAll);
+
+// get one mahasiswa
+router.get("/:nim", controller.mahasiswa.getOne);
+
+//-----------------------------------------------------
+//post mahasiswa
+router.post("/", controller.mahasiswa.post);
+//-----------------------------------------------------
+
+module.exports = router;
+```
+
+Selanjutnya jika kita melakukan post request di postman menggunakan url `http://localhost:2023/mahasiswa` dan req.body:
+
+```
+{
+    "nama": "Nashr Alfarabi",
+    "jurusan": "Kedokteran"
+}
+```
+
+Maka hasilnya akan tampil response status 201 (aturan standar yang menunjukkan bahwa data berhasil ditambahkan) dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil ditambahkan",
+    "data": {
+        "nama": "Nashr Alfarabi",
+        "jurusan": "Kedokteran"
+    }
+}
+```
+
+### Put
+
+Untuk bisa menjalankan put request menggunakan ORM, kita harus membuat function controllernya yang sudah kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`. Di contoh ini function controller untuk put request ini kita beri nama `put` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+const { mahasiswa } = require(".");
+const model = require("../config/model/index");
+const controller = {};
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// post request
+controller.post = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: req.body.nim,
+      nama: req.body.nama,
+      jurusan: req.body.jurusan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+      data: mahasiswa,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//-------------------------------------------------------------------
+//put request
+controller.put = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.update(
+      {
+        nama: req.body.nama,
+        jurusan: req.body.jurusan,
+      },
+      {
+        where: {
+          nim: req.params.nim,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+//-------------------------------------------------------------------
+
+module.exports = controller;
+```
+
+Di function `put` di atas terdapat function `update()` milik `sequelize` digunakan untuk mengupdate data dalam database. Di dalam function `update()` membuatuhkan argument berupa req.body yang nantinya akan dikirim ke server untuk merubah data di dalam database dan juga `where` yang berisi req.params untuk dijadikan reference data yang akan diupdate.
+
+Selanjutnya kita import function `post` yang kita buat tadi di bagian `route` yang kita fokuskan di folder `routes` tepatnya di file `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+const controller = require("../controller/index");
+
+// get all mahsiswa
+router.get("/", controller.mahasiswa.getAll);
+
+// get one mahasiswa
+router.get("/:nim", controller.mahasiswa.getOne);
+
+//post mahasiswa
+router.post("/", controller.mahasiswa.post);
+
+//------------------------------------------------------------------
+//put mahasiswa
+router.put("/:nim", controller.mahasiswa.put);
+//------------------------------------------------------------------
+
+module.exports = router;
+```
+
+Selanjutnya jika kita ingin mengupdate data mahasiswa yang nimnya 2, kita bisa melakukan put di postman menggunakan url `http://localhost:2023/mahasiswa/2` dan req.body:
+
+```
+{
+    "nama": "Alkhawarizmi",
+    "jurusan": "Matematic"
+}
+```
+
+Hasilnya akan tampil response status 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil diupdate"
+}
+```
+
+### Delete
+
+Untuk melakukan delete request menggunakan ORM kita harus membuat function controllnya di tempat yang sudah kita fokuskan di folder `controller` tepatnya di file `mahasiswa.js`. Di contoh ini function controller untuk delete request ini kita beri nama `delete` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/controller/mahasiswa.js).
+
+```
+const { mahasiswa } = require(".");
+const model = require("../config/model/index");
+const controller = {};
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll();
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error,
+    });
+  }
+};
+
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// post request
+controller.post = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: req.body.nim,
+      nama: req.body.nama,
+      jurusan: req.body.jurusan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+      data: mahasiswa,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//put request
+controller.put = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.update(
+      {
+        nama: req.body.nama,
+        jurusan: req.body.jurusan,
+      },
+      {
+        where: {
+          nim: req.params.nim,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//--------------------------------------------------------------------------
+// delete request
+controller.delete = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.destroy({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+//--------------------------------------------------------------------------
+
+module.exports = controller;
+```
+
+Di dalam function `delete` itu terdapat function `destroy()` yang merupakan function dari `sequelize`, untuk menghapus data di dalam database. Function `destroy()` ini membuatuhkan argument berupa `where` yang berisi req.params untuk dijadikan sebagai reference data yang akan dihapus.
+
+Selanjutnya kita import function `delete` yang kita buat tadi ke bagian router yang sudah kita fokuskan di folder `routes` tepatnya di file `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/orm/routes/mahasiswa.js).
+
+```
+const express = require("express");
+const router = express.Router();
+const db = require("../config/database/mysql");
+const controller = require("../controller/index");
+
+// get all mahsiswa
+router.get("/", controller.mahasiswa.getAll);
+
+// get one mahasiswa
+router.get("/:nim", controller.mahasiswa.getOne);
+
+//post mahasiswa
+router.post("/", controller.mahasiswa.post);
+
+//put mahasiswa
+router.put("/:nim", controller.mahasiswa.put);
+
+//-------------------------------------------------------------------
+// delete mahasiswa
+router.delete("/:nim", controller.mahasiswa.delete);
+//-------------------------------------------------------------------
+
+module.exports = router;
+```
+
+Sehinggia jika kita ingin menghapus data mahasiswa yang nimnya 1 kita bisa melakukan delete request di postman menggunakan url `http://localhost:2023/mahasiswa/1`. Hasilnya akan tampil response 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa berhasil dihapus"
+}
+```
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
