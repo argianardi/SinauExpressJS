@@ -1,6 +1,6 @@
-const { mahasiswa } = require(".");
 const model = require("../config/model/index");
 const controller = {};
+const { Op } = require("sequelize");
 
 //get request all mahasiswa
 controller.getAll = async function (req, res) {
@@ -57,11 +57,12 @@ controller.post = async function (req, res) {
     let mahasiswa = await model.mahasiswa.create({
       nim: req.body.nim,
       nama: req.body.nama,
-      jurusan: req.body.jurusan,
+      kd_jurusan: req.body.jurusan_kd,
+      alamat: req.body.alamat,
+      angkatan: req.body.angkatan,
     });
     res.status(201).json({
       message: "Data mahasiswa berhasil ditambahkan",
-      data: mahasiswa,
     });
   } catch (error) {
     res.status(404).json({
@@ -75,8 +76,11 @@ controller.put = async function (req, res) {
   try {
     let mahasiswa = await model.mahasiswa.update(
       {
+        nim: req.body.nim,
         nama: req.body.nama,
-        jurusan: req.body.jurusan,
+        kd_jurusan: req.body.kd_jurusan,
+        alamat: req.body.alamat,
+        angkatan: req.body.angkatan,
       },
       {
         where: {
@@ -106,6 +110,44 @@ controller.delete = async function (req, res) {
     res.status(200).json({
       message: "Data mahasiswa berhasil dihapus",
     });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// getSearch (get req use req.query)
+controller.getSearch = async function (req, res) {
+  const search = req.query.keyword;
+
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      where: {
+        [Op.or]: [
+          {
+            nim: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+          {
+            nama: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+        ],
+      },
+    });
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+      });
+    }
   } catch (error) {
     res.status(404).json({
       message: error.message,
