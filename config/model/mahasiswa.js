@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize");
 const db = require("../database/mysql");
+//input jurusan table
 const jurusan = require("./jurusan");
 
 let mahasiswa = db.define(
@@ -25,7 +26,7 @@ db.sync({ alter: true })
     console.log("Unable to create table:", error);
   });
 
-// menambahkan join FK ke table jurusan
+// add FK to  jurusan table, reference to kd_jurusan in jurusan table
 mahasiswa.hasOne(jurusan, { foreignKey: "kd_jurusan" });
 mahasiswa.belongsTo(jurusan, { foreignKey: "kd_jurusan" });
 
