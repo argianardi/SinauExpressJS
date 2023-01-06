@@ -5,7 +5,9 @@ const { Op } = require("sequelize");
 //get request all mahasiswa
 controller.getAll = async function (req, res) {
   try {
-    let mahasiswa = await model.mahasiswa.findAll();
+    let mahasiswa = await model.mahasiswa.findAll({
+      include: [{ model: model.jurusan }],
+    });
     if (mahasiswa.length > 0) {
       res.status(200).json({
         message: "Get method mahasiswa",
@@ -19,7 +21,7 @@ controller.getAll = async function (req, res) {
     }
   } catch (error) {
     res.status(404).json({
-      message: error,
+      message: error.message,
     });
   }
 };
@@ -53,8 +55,8 @@ controller.getOne = async function (req, res) {
 
 // post request
 controller.post = async function (req, res) {
-  const { nim, nama, jurusan, alamat, angkatan } = req.body;
-  if (!(nim && nama && jurusan && alamat && angkatan)) {
+  const { nim, nama, kd_jurusan, alamat, angkatan } = req.body;
+  if (!(nim && nama && kd_jurusan && alamat && angkatan)) {
     return res.status(400).json({
       message: "Some input are required",
     });
@@ -64,7 +66,7 @@ controller.post = async function (req, res) {
     let mahasiswa = await model.mahasiswa.create({
       nim: nim,
       nama: nama,
-      jurusan: jurusan,
+      kd_jurusan: kd_jurusan,
       alamat: alamat,
       angkatan: angkatan,
     });
@@ -80,8 +82,8 @@ controller.post = async function (req, res) {
 
 //put request
 controller.put = async function (req, res) {
-  const { nim, nama, jurusan, alamat, angkatan } = req.body;
-  if (!(nim && nama && jurusan && alamat && angkatan)) {
+  const { nim, nama, kd_jurusan, alamat, angkatan } = req.body;
+  if (!(nim && nama && kd_jurusan && alamat && angkatan)) {
     return res.status(400).json({
       message: "Some input are required",
     });
@@ -92,7 +94,7 @@ controller.put = async function (req, res) {
       {
         nim: nim,
         nama: nama,
-        jurusan: jurusan,
+        kd_jurusan: kd_jurusan,
         alamat: alamat,
         angkatan: angkatan,
       },
