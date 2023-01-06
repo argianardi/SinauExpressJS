@@ -2294,6 +2294,311 @@ Jika kita ingin melakukn get request data berdasarkan namanya dengan keyword `al
 
 Atau jika kita ingin melakukan get request data mahasiswa berdasarkan nimnya, karena kita menggunakan req.query urlnya akan jadi `http://localhost:2023/mahasiswa/search?keyword=10002`. Hasilnya akan tampil response 200 dan body response berupa data mahasiswa yang nimnya bernilai 10002.
 
+## Join Table
+
+Kita akan coba melakaukan join dari table `mahasiswa` (yang sudah kita buat table-nya) ke table `jurusan`[[1]](https://www.youtube.com/watch?v=w7gjX-80MX0&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=13). Pertama kita harus membuat dulu table `jurusan` di folder `model` dengan nama file `jurusan.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/joinSequelize/config/model/jurusan.js).
+
+```
+const Sequelize = require("sequelize");
+const db = require("../database/mysql");
+
+let jurusan = db.define(
+  "jurusan",
+  {
+    kd_jurusan: { type: Sequelize.INTEGER, primaryKey: true },
+    nama_jurusan: Sequelize.STRING,
+  },
+  {
+    freezeTableName: true,
+    timestamps: false,
+  }
+);
+
+db.sync({ alter: true })
+  .then(() => {
+    console.log("Jurusan table created successfully!");
+  })
+  .catch((error) => {
+    console.log("Unable to create table:", error);
+  });
+
+jurusan.removeAttribute("id");
+module.exports = jurusan;
+```
+
+Selanjutnya kita importkan table `jurusan` yang kita buat tadi di bagian model utama yaitu folder `config/model` di file `index.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/joinSequelize/config/model/index.js).
+
+```
+const mahasiswa = require("./mahasiswa");
+//import jurusan table
+//----------------------------------------------------
+const jurusan = require("./jurusan");
+//----------------------------------------------------
+const model = {};
+
+model.mahasiswa = mahasiswa;
+//add jurusan table to model
+//----------------------------------------------------
+model.jurusan = jurusan;
+//----------------------------------------------------
+module.exports = model;
+```
+
+Selanjutnya di bagian model (yang kita fokuskan di dalam folder `config/model`) kita tambahkan `foreign key` di dalam table mahasiswa tepatnya file `mahasiswa.js` [[3]](https://github.com/argianardi/SinauExpressJS/blob/joinSequelize/config/model/mahasiswa.js).
+
+```
+const Sequelize = require("sequelize");
+const db = require("../database/mysql");
+//input jurusan table
+//--------------------------------------------------------------
+const jurusan = require("./jurusan");
+//--------------------------------------------------------------
+
+let mahasiswa = db.define(
+  "mahasiswa",
+  {
+    nim: { type: Sequelize.INTEGER, primaryKey: true },
+    nama: Sequelize.STRING,
+    kd_jurusan: Sequelize.STRING,
+    alamat: Sequelize.STRING,
+    angkatan: Sequelize.STRING,
+  },
+  {
+    freezeTableName: true,
+    timestamps: false,
+  }
+);
+
+db.sync({ alter: true })
+  .then(() => {
+    console.log("Mahasiswa table created successfully!");
+  })
+  .catch((error) => {
+    console.log("Unable to create table:", error);
+  });
+
+// add FK to  jurusan table, reference to kd_jurusan in jurusan table
+//---------------------------------------------------------------------------------------
+mahasiswa.hasOne(jurusan, { foreignKey: "kd_jurusan" });
+mahasiswa.belongsTo(jurusan, { foreignKey: "kd_jurusan" });
+//---------------------------------------------------------------------------------------
+
+mahasiswa.removeAttribute("id");
+module.exports = mahasiswa;
+```
+
+Untuk menambahkan `foreign key`, kita harus mengimport table yang akan dijadikan reference (di contoh ini table `jurusan`). Selanjutnya tambahkan script untuk membuat `foreignkey` dengan reference salah satu field (di contoh ini `kd_jurusan`) dari table yang diimport tadi.
+
+Selanjutnya di bagian controller (yang kita fokuskan di folder `controller`) tepatnya di bagian controller untuk fitur mahasiswa yaitu di file `mahasiswa.js` kita tambahka script untu join ke table `jurusan` [[3]](https://github.com/argianardi/SinauExpressJS/blob/joinSequelize/controller/mahasiswa.js).
+
+```
+const model = require("../config/model/index");
+const controller = {};
+const { Op } = require("sequelize");
+
+//get request all mahasiswa
+controller.getAll = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      //---------------------------------------------------------------------
+      include: [{ model: model.jurusan }], //join to jurusan table
+      //---------------------------------------------------------------------
+    });
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Get method mahasiswa",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Mahasiswa not found",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//get request one mahasiswa
+controller.getOne = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      //---------------------------------------------------------------------
+      include: [{ model: model.jurusan }], //join to jurusan table
+      //---------------------------------------------------------------------
+      where: {
+        nim: req.params.nim,
+      },
+    });
+
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Tidak ada data",
+        data: [],
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// post request
+controller.post = async function (req, res) {
+  const { nim, nama, kd_jurusan, alamat, angkatan } = req.body;
+  if (!(nim && nama && kd_jurusan && alamat && angkatan)) {
+    return res.status(400).json({
+      message: "Some input are required",
+    });
+  }
+
+  try {
+    let mahasiswa = await model.mahasiswa.create({
+      nim: nim,
+      nama: nama,
+      kd_jurusan: kd_jurusan,
+      alamat: alamat,
+      angkatan: angkatan,
+    });
+    res.status(201).json({
+      message: "Data mahasiswa berhasil ditambahkan",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+//put request
+controller.put = async function (req, res) {
+  const { nim, nama, kd_jurusan, alamat, angkatan } = req.body;
+  if (!(nim && nama && kd_jurusan && alamat && angkatan)) {
+    return res.status(400).json({
+      message: "Some input are required",
+    });
+  }
+
+  try {
+    let mahasiswa = await model.mahasiswa.update(
+      {
+        nim: nim,
+        nama: nama,
+        kd_jurusan: kd_jurusan,
+        alamat: alamat,
+        angkatan: angkatan,
+      },
+      {
+        where: {
+          nim: req.params.nim,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Data mahasiswa berhasil diupdate",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// delete request
+controller.delete = async function (req, res) {
+  try {
+    let mahasiswa = await model.mahasiswa.destroy({
+      where: {
+        nim: req.params.nim,
+      },
+    });
+    res.status(200).json({
+      message: "Data mahasiswa berhasil dihapus",
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+// getSearch (get req use req.query)
+controller.getSearch = async function (req, res) {
+  const search = req.query.keyword;
+
+  try {
+    let mahasiswa = await model.mahasiswa.findAll({
+      //---------------------------------------------------------------------
+      include: [{ model: model.jurusan }], //join to jurusan table
+      //---------------------------------------------------------------------
+      where: {
+        [Op.or]: [
+          {
+            nim: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+          {
+            nama: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+        ],
+      },
+    });
+    if (mahasiswa.length > 0) {
+      res.status(200).json({
+        message: "Data mahasiswa ditemukan",
+        data: mahasiswa,
+      });
+    } else {
+      res.status(200).json({
+        message: "Data mahasiswa tidak ditemukan",
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      message: error.message,
+    });
+  }
+};
+
+module.exports = controller;
+```
+
+Hasilnya, jika kita coba melakukan get request misalnya menggunakan url `http://localhost:2023/mahasiswa/search?keyword=10001` maka akan tampil status response 200 dan body response:
+
+```
+{
+    "message": "Data mahasiswa ditemukan",
+    "data": [
+        {
+            "nim": 10001,
+            "nama": "Alkhawarizmi",
+            "kd_jurusan": "2",
+            "alamat": "Kazakhstan",
+            "angkatan": "2001",
+            "jurusan": {
+                "kd_jurusan": 2,
+                "nama_jurusan": "matematic"
+            }
+        }
+    ]
+}
+```
+
+Terlihat di body respose di atas terdapat data jurusan yang berisi `kd_jurusan` dan `nama_jurusan` yang sebenarnya datanya di dapat dari table `jurusan`.
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
