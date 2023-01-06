@@ -1,6 +1,22 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const basicAuth = require("express-basic-auth"); //import basic-auth
+
+//Definisikan user
+app.use(
+  basicAuth({
+    users: { admin: "password" },
+    unauthorizedResponse: basicAuthResponse,
+  })
+);
+
+// handle Unauthorized
+function basicAuthResponse(req) {
+  return req.auth
+    ? "Credentials " + req.auth.user + ": " + req.auth.password + " rejected"
+    : "Unauthorized";
+}
 
 const mahasiswaRoutes = require("./routes/mahasiswa");
 
