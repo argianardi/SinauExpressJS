@@ -2599,6 +2599,69 @@ Hasilnya, jika kita coba melakukan get request misalnya menggunakan url `http://
 
 Terlihat di body respose di atas terdapat data jurusan yang berisi `kd_jurusan` dan `nama_jurusan` yang sebenarnya datanya di dapat dari table `jurusan`.
 
+## Authentication dan Security
+
+### Authentication
+
+Sebelum lebih jauh, kita akan bahas dulu perbendaan autentikasi dan otorisasi. autentikasi adalah proses verikfikasi bahwa seorang user sudah tergabung/terdaftar dalam sistem atau tidak , sedangkan otorisasi adalah hak akses yang dimiliki oleh seorang user dalam suatu sistem ata aplikasi [[1]](https://www.youtube.com/watch?v=ggLcb2bh6eg&list=PLwdv9eOjH5CZrEPvWIzJqdaPfeCny9urc&index=15). Untuk fitur authentication ini kita akan menggunakan menggunakan `basic-auth`. Semua API yang dipasang basic auth ini tidak akan bisa diakses sebelum kita memasukkan username dan password yang ditentukan. Untuk bisa menggunakannya kita harus menginstallnya dulu dengan command:
+
+```
+npm i express-basic-auth
+```
+
+Selanjutnya kita tambahkan script di entry point aplikasi kita yaitu di file `index.js`. Disini kita lakukan import `basic-auth`, definisikan username dan password, terakhir buat function handle [[3]](https://github.com/argianardi/SinauExpressJS/blob/auth/index.js).
+
+```
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
+//--------------------------------------------------------------------------------------
+const basicAuth = require("express-basic-auth"); //import basic-auth
+
+//Definisikan user
+app.use(
+  basicAuth({
+    users: { admin: "password" },
+    unauthorizedResponse: basicAuthResponse,
+  })
+);
+
+// handle Unauthorized
+function basicAuthResponse(req) {
+  return req.auth
+    ? "Credentials " + req.auth.user + ": " + req.auth.password + " rejected"
+    : "Unauthorized";
+}
+//--------------------------------------------------------------------------------------
+
+const mahasiswaRoutes = require("./routes/mahasiswa");
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use("/mahasiswa", mahasiswaRoutes);
+
+app.use((req, res, next) => {
+  const error = new Error("Tidak ditemukan");
+  error.status = 404;
+  next(error);
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: error.message,
+  });
+});
+
+module.exports = app;
+```
+
+Di bagian definisi user kita bisa membuat username dan password, selain itu di dalamnya terdapat bagian `unauthorizedResponse` kita dapat mengatur jika terjadi anauthorized kita kita akan melakukan apa (di contoh ini memanggil function `basicAuthResponse`) untuk menghandle saat terjadi unauthorized(password atau username tidak sama).
+
+Selanjutnya di bagian handle Unauthorized terdapat function `basicAuthResponse` maksudnya jika username atau password yang diinputkan tidak sama maka tampilkan `"Credentials " + req.auth.user + ": " + req.auth.password + " rejected"`.
+
+Hasilnya jika kita melakukan request API di postman datanya tidak akan tampil, kita hanya akan mendapatkan hasil `Unauthorized`, untuk bisa mengakses reqest API kita harus memasukkan username dan password di `Authorization` di type `Basic Auth`. Jika username dan password yang kita inputkan benar maka kita akan mendapatkan data hasil dari request API yang kita lakukan, jika salah atau tidak sama maka kita akan mendapatkan `"Credentials " + req.auth.user + ": " + req.auth.password + " rejected"`
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
