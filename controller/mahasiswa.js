@@ -6,7 +6,7 @@ const { Op } = require("sequelize");
 controller.getAll = async function (req, res) {
   try {
     let mahasiswa = await model.mahasiswa.findAll({
-      include: [{ model: model.jurusan }],
+      include: [{ model: model.jurusan }], //join to jurusan table
     });
     if (mahasiswa.length > 0) {
       res.status(200).json({
@@ -30,6 +30,7 @@ controller.getAll = async function (req, res) {
 controller.getOne = async function (req, res) {
   try {
     let mahasiswa = await model.mahasiswa.findAll({
+      include: [{ model: model.jurusan }], //join to jurusan table
       where: {
         nim: req.params.nim,
       },
@@ -139,6 +140,7 @@ controller.getSearch = async function (req, res) {
 
   try {
     let mahasiswa = await model.mahasiswa.findAll({
+      include: [{ model: model.jurusan }], //join to jurusan table
       where: {
         [Op.or]: [
           {
