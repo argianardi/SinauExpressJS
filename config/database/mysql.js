@@ -1,8 +1,13 @@
 let Sequelize = require("sequelize");
 
-let db = new Sequelize("kuliah", "root", "zero", {
-  dialect: "mysql",
-  host: "localhost",
-});
+let db = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USERNAME,
+  process.env.DB_PASSWORD,
+  {
+    dialect: "mysql",
+    host: process.env.DB_HOST,
+  }
+);
 
 module.exports = db;
