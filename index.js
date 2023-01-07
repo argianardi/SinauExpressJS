@@ -1,11 +1,12 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+require("dotenv").config(); //konfigurasi dotenv
 // const basicAuth = require("express-basic-auth"); //import basic-auth
-const helmet = require("helmet"); //import helmet
+// const helmet = require("helmet"); //import helmet
 
 //add helmet
-app.use(helmet());
+// app.use(helmet());
 
 //Definisikan user
 // app.use(
@@ -23,6 +24,7 @@ app.use(helmet());
 // }
 
 const mahasiswaRoutes = require("./routes/mahasiswa");
+const PORT = process.env.PORT || 2022;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -41,4 +43,7 @@ app.use((error, req, res, next) => {
   });
 });
 
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server berhasil dirunning di port ${PORT}`);
+});
+// module.exports = app;
