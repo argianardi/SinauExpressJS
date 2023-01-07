@@ -2721,6 +2721,116 @@ app.use((error, req, res, next) => {
 module.exports = app;
 ```
 
+## Setup Environtment Variable
+
+Environment variable digunakan untuk menyimpan data - data yang bersifat sensitif atau rahasia, tujuannya agar data - data tersebut tidak bisa diakses oleh user dari sisi client [[6]](https://www.youtube.com/watch?v=jBAZPXNQq0Y&t=2542s). Untuk bisa menggunakannya kita harus install package `dotenv` dengan command:
+
+```
+npm i dotenv
+```
+
+Selanjutnya kita masukkan configurasinya di file entry point project kita (`index.js`)
+
+```
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
+//----------------------------------------------------------------
+require("dotenv").config(); //konfigurasi dotenv
+//----------------------------------------------------------------
+
+const mahasiswaRoutes = require("./routes/mahasiswa");
+const PORT = process.env.PORT || 2022;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use("/mahasiswa", mahasiswaRoutes);
+
+app.use((req, res, next) => {
+  const error = new Error("Tidak ditemukan");
+  error.status = 404;
+  next(error);
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: error.message,
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server berhasil dirunning di port ${PORT}`);
+});
+```
+
+Selanjutnya di root project buat file .env, kemudian kita simpan/assign data yang sifatnya sensitif tadi disini
+
+```
+PORT=2023
+DB_HOST=localhost
+DB_USERNAME=root
+DB_PASSWORD=zero
+DB_NAME=kuliah
+```
+
+Kemudian kembali lagi ke file entry point (`index.js`) import dan gunakan Port yang tersimpan di file .'env'.
+
+```
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
+require("dotenv").config(); //konfigurasi dotenv
+//-------------------------------------------------------------------------
+const PORT = process.env.PORT || 2022;
+//-------------------------------------------------------------------------
+
+const mahasiswaRoutes = require("./routes/mahasiswa");
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use("/mahasiswa", mahasiswaRoutes);
+
+app.use((req, res, next) => {
+  const error = new Error("Tidak ditemukan");
+  error.status = 404;
+  next(error);
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: error.message,
+  });
+});
+
+//-------------------------------------------------------------------------
+app.listen(PORT, () => {
+  console.log(`Server berhasil dirunning di port ${PORT}`);
+});
+//-------------------------------------------------------------------------
+```
+
+Selanjutnya di bagian configurasi database yaitu di folder `config/database` di file `mysql.js` importkan semua data - data yang kita assign di file .`env` tadi untuk dijadikan data configurasi di `sequelize`
+
+```
+let Sequelize = require("sequelize");
+
+let db = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USERNAME,
+  process.env.DB_PASSWORD,
+  {
+    dialect: "mysql",
+    host: process.env.DB_HOST,
+  }
+);
+
+module.exports = db;
+```
+
+Terakhir kita masukkan nama file `.env` tadi ke file `.gitignore`.
+
 ## Reference
 
 - [[1] Programmer Copy Paste](https://www.youtube.com/@ProgrammerCopyPaste)
@@ -2728,3 +2838,4 @@ module.exports = app;
 - [[3] https://github.com/argianardi/SinauExpressJS/](https://github.com/argianardi/SinauExpressJS/)
 - [[4] himasis.org](https://himasis.org/artikel/242-materi-membuat-restful-api-dengan-express-js-bagian-3-komunikasi-server)
 - [[5] medium.com/@musliadi](https://medium.com/@musliadi/apa-perbedaan-req-body-req-params-req-query-pada-nodejs-eb3450914447)
+- [[6] youtube.com/prawitohudoro](https://www.youtube.com/@prawitohudoro)
